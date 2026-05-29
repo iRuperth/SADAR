@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 sadar-preprocess = "sadar.data.pipeline:main"
+sadar-baseline = "sadar.models.baseline:main"
 
 [dependency-groups]
 dev = [

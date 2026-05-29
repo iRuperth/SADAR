@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess lint clean
+.PHONY: help install notebook preprocess baseline lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -13,6 +13,9 @@ notebook: ## Open Jupyter for the notebooks (EDA, etc.)
 
 preprocess: ## Run the preprocessing pipeline (raw -> tensors)
 	uv run sadar-preprocess
+
+baseline: ## Fit and evaluate the Isolation Forest baseline
+	uv run sadar-baseline
 
 lint: ## Python linter
 	uv run ruff check src
