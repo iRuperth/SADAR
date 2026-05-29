@@ -15,12 +15,8 @@ dependencies = [
     "pyproj>=3.6",
 ]
 
-[project.optional-dependencies]
-dl = [
-    "torch>=2.2",
-    "optuna>=3.6",
-    "wandb>=0.17",
-]
+[project.scripts]
+sadar-preprocess = "sadar.data.pipeline:main"
 
 [dependency-groups]
 dev = [
