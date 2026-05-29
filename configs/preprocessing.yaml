@@ -1,0 +1,48 @@
+seed: 42
+
+data:
+  raw_dir: ${oc.env:SADAR_DATA_DIR,data/raw}
+  file_glob: lemd_*.parquet
+  airport: LEMD
+
+runway:
+  ref_lat: 40.4936
+  ref_lon: -3.5668
+  projection_epsg: 32630
+
+resample:
+  seconds: 10
+
+cleaning:
+  min_points_per_flight: 40
+  max_gap_seconds: 120
+  max_missing_fraction: 0.5
+  remove_go_arounds: true
+  remove_emergency_squawks: true
+  emergency_squawks: [7500, 7600, 7700]
+  interpolate_columns: [lat, lon, baroaltitude, velocity, heading, vertrate]
+  go_around:
+    near_runway_m: 5000
+    descend_vertrate: -1.0
+    climb_vertrate: 2.0
+    min_climb_points: 3
+
+features:
+  columns: [x_rel, y_rel, baroaltitude, velocity, sin_hdg, cos_hdg, vertrate]
+  altitude_source: baroaltitude
+
+windowing:
+  length: 60
+  stride: 30
+
+split:
+  train_years: [2017, 2018, 2019]
+  eval_years: [2020]
+  val_fraction: 0.5
+
+scaling:
+  method: standard
+
+output:
+  dir: ${oc.env:SADAR_PROCESSED_DIR,data/processed}
+  format: npy
