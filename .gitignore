@@ -4,15 +4,7 @@ __pycache__/
 .ipynb_checkpoints/
 .ruff_cache/
 *.egg-info/
-data/*
-!data/.gitkeep
-models/*
-!models/.gitkeep
-wandb/
-mlruns/
-node_modules/
-frontend/dist/
-frontend/node_modules/
+/data/
 .DS_Store
 .vscode/
 .idea/
