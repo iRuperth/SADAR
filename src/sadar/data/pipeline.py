@@ -17,6 +17,7 @@ class PipelineArtifacts:
     train: np.ndarray
     val: np.ndarray
     test: np.ndarray
+    anomalies: np.ndarray
     scaler: scaling.StandardScaler3D
 
 
@@ -47,16 +48,26 @@ def load_config(path: str) -> dict:
         return _resolve(yaml.safe_load(handle))
 
 
-def _clean(df, config):
+def _split_normal_anomalies(df, config):
     cleaning_cfg = config["cleaning"]
     df = cleaning.drop_short_flights(df, cleaning_cfg["min_points_per_flight"])
+
+    anomaly_ids = set()
     if cleaning_cfg["remove_emergency_squawks"]:
-        df = cleaning.remove_emergency_flights(df, cleaning_cfg["emergency_squawks"])
+        anomaly_ids |= cleaning.emergency_flight_ids(df, cleaning_cfg["emergency_squawks"])
     if cleaning_cfg["remove_go_arounds"]:
-        df = cleaning.remove_go_around_flights(df, **cleaning_cfg["go_around"])
-    return cleaning.handle_nulls(
-        df, cleaning_cfg["interpolate_columns"], cleaning_cfg["max_missing_fraction"]
+        anomaly_ids |= cleaning.go_around_flight_ids(df, **cleaning_cfg["go_around"])
+
+    columns = cleaning_cfg["interpolate_columns"]
+    max_missing = cleaning_cfg["max_missing_fraction"]
+    is_anomaly = df["flight_id"].isin(anomaly_ids)
+    normal = cleaning.handle_nulls(
+        df[~is_anomaly].reset_index(drop=True), columns, max_missing
     )
+    anomalies = cleaning.handle_nulls(
+        df[is_anomaly].reset_index(drop=True), columns, max_missing
+    )
+    return normal, anomalies
 
 
 def _add_features(df, config):
@@ -83,12 +94,13 @@ def _window_split(df, config) -> np.ndarray:
 
 def run(config: dict) -> PipelineArtifacts:
     df = data_io.load_raw(config["data"]["raw_dir"], config["data"]["file_glob"])
-    df = _clean(df, config)
-    df = _add_features(df, config)
+    normal_df, anomaly_df = _split_normal_anomalies(df, config)
+    normal_df = _add_features(normal_df, config)
+    anomaly_df = _add_features(anomaly_df, config)
 
     split_cfg = config["split"]
     train_df, val_df, test_df = splitting.split_by_year(
-        df,
+        normal_df,
         split_cfg["train_years"],
         split_cfg["eval_years"],
         split_cfg["val_fraction"],
@@ -98,12 +110,14 @@ def run(config: dict) -> PipelineArtifacts:
     train_windows = _window_split(train_df, config)
     val_windows = _window_split(val_df, config)
     test_windows = _window_split(test_df, config)
+    anomaly_windows = _window_split(anomaly_df, config)
 
     scaler = scaling.StandardScaler3D().fit(train_windows)
     return PipelineArtifacts(
         train=scaler.transform(train_windows),
         val=scaler.transform(val_windows),
         test=scaler.transform(test_windows),
+        anomalies=scaler.transform(anomaly_windows),
         scaler=scaler,
     )
 
@@ -113,6 +127,7 @@ def save_artifacts(artifacts: PipelineArtifacts, output_dir: str) -> None:
     np.save(os.path.join(output_dir, "train.npy"), artifacts.train)
     np.save(os.path.join(output_dir, "val.npy"), artifacts.val)
     np.save(os.path.join(output_dir, "test.npy"), artifacts.test)
+    np.save(os.path.join(output_dir, "anomalies.npy"), artifacts.anomalies)
     artifacts.scaler.save(os.path.join(output_dir, "scaler.npz"))
 
 
@@ -129,6 +144,7 @@ def main() -> None:
         f"train {artifacts.train.shape} "
         f"val {artifacts.val.shape} "
         f"test {artifacts.test.shape} "
+        f"anomalies {artifacts.anomalies.shape} "
         f"-> {config['output']['dir']}"
     )
 

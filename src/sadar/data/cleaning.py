@@ -43,8 +43,12 @@ def go_around_flight_ids(df: pd.DataFrame, **thresholds) -> set:
     return set(flags[flags].index)
 
 
+def emergency_flight_ids(df: pd.DataFrame, codes: list[int]) -> set:
+    return set(df.loc[df["squawk"].isin(codes), "flight_id"].unique())
+
+
 def remove_emergency_flights(df: pd.DataFrame, codes: list[int]) -> pd.DataFrame:
-    flagged = df.loc[df["squawk"].isin(codes), "flight_id"].unique()
+    flagged = emergency_flight_ids(df, codes)
     return df[~df["flight_id"].isin(flagged)].reset_index(drop=True)
 
 
