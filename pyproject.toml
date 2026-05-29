@@ -20,6 +20,7 @@ dependencies = [
 sadar-preprocess = "sadar.data.pipeline:main"
 sadar-baseline = "sadar.models.baseline:main"
 sadar-train-lstm = "sadar.models.train_lstm:main"
+sadar-evaluate = "sadar.eval.evaluate:main"
 
 [dependency-groups]
 dev = [

@@ -54,6 +54,39 @@ def reconstruction_error(
     return np.concatenate(scores)
 
 
+def per_step_error(
+    model: nn.Module, windows: np.ndarray, device: torch.device, batch_size: int = 512
+) -> np.ndarray:
+    # Reconstruction error at each timestep (averaged over features only). Keeps
+    # the time axis so we can see how soon within a window the model reacts to an
+    # injected anomaly, which is what detection latency measures.
+    model.eval()
+    chunks = []
+    with torch.no_grad():
+        for (batch,) in _loader(windows, batch_size, shuffle=False):
+            batch = batch.to(device)
+            reconstructed = model(batch)
+            error = ((batch - reconstructed) ** 2).mean(dim=2)
+            chunks.append(error.cpu().numpy())
+    return np.concatenate(chunks)
+
+
+def load_lstm(checkpoint_path: str, device: torch.device) -> LSTMAutoencoder:
+    # Rebuild a trained autoencoder from its checkpoint (weights plus the shape
+    # information saved alongside) and move it onto the target device for scoring.
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    model_cfg = checkpoint["model"]
+    model = LSTMAutoencoder(
+        n_features=checkpoint["n_features"],
+        hidden_size=model_cfg["hidden_size"],
+        latent_size=model_cfg["latent_size"],
+        num_layers=model_cfg["num_layers"],
+        dropout=model_cfg["dropout"],
+    )
+    model.load_state_dict(checkpoint["state_dict"])
+    return model.to(device)
+
+
 def _run_epoch(
     model: nn.Module,
     loader: DataLoader,
