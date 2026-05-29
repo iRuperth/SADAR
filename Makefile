@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline lint clean
+.PHONY: help install notebook preprocess baseline train-lstm lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -16,6 +16,9 @@ preprocess: ## Run the preprocessing pipeline (raw -> tensors)
 
 baseline: ## Fit and evaluate the Isolation Forest baseline
 	uv run sadar-baseline
+
+train-lstm: ## Train the LSTM autoencoder on the normal flights
+	uv run sadar-train-lstm
 
 lint: ## Python linter
 	uv run ruff check src
