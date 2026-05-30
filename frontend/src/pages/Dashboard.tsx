@@ -17,7 +17,9 @@ export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("monitor");
 
   return (
-    <div style={{ padding: 24, maxWidth: 1320, margin: "0 auto" }}>
+    <>
+      <div className="tower-backdrop" />
+      <div style={{ padding: 24, maxWidth: 1320, margin: "0 auto", position: "relative" }}>
       <header
         style={{
           display: "flex",
@@ -54,6 +56,7 @@ export default function Dashboard() {
         {tab === "simulator" && <Simulator />}
         {tab === "metrics" && <Metrics />}
       </main>
-    </div>
+      </div>
+    </>
   );
 }
