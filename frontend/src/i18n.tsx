@@ -102,7 +102,7 @@ const EN: Dict = {
       },
       {
         title: "Every route checked against the pattern",
-        body: "Each approach and departure is compared with how flights normally behave, so any drift off course stands out.",
+        body: "We watch over your flight from start to finish, and any drift off the usual course stands out.",
       },
       {
         title: "Deviations and incidents, caught early",
@@ -170,7 +170,7 @@ const ES: Dict = {
       },
       {
         title: "Cada ruta, comparada con el patrón",
-        body: "Cada aproximación y despegue se compara con cómo vuelan normalmente, así cualquier desvío del rumbo salta a la vista.",
+        body: "Vigilamos tu vuelo de principio a fin, y cualquier desvío del rumbo habitual salta a la vista.",
       },
       {
         title: "Desviaciones e incidencias, a tiempo",
