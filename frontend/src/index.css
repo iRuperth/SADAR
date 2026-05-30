@@ -84,7 +84,7 @@ button:hover {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(5, 8, 13, 0.86), rgba(5, 8, 13, 0.92)),
+    linear-gradient(rgba(5, 8, 13, 0.82) 0%, rgba(5, 8, 13, 0.58) 26%, rgba(5, 8, 13, 0.62) 100%),
     url(/control-tower.jpg);
   background-size: cover;
   background-position: center;
