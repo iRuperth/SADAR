@@ -48,6 +48,31 @@ async function getJson<T>(path: string): Promise<T> {
   return response.json();
 }
 
+export interface SceneFlight {
+  id: number;
+  callsign: string;
+  path: PathPoint[];
+  scores: number[];
+  anomalous: boolean;
+  start_offset: number;
+}
+
+export interface InjectedFlight extends SceneFlight {
+  injected: true;
+  kind: string;
+}
+
+export interface Scene {
+  flights: SceneFlight[];
+  step_threshold: number;
+  step_seconds: number;
+  center: { lat: number; lon: number };
+}
+
+export function getScene(count = 12): Promise<Scene> {
+  return getJson(`/scene?count=${count}`);
+}
+
 export interface MetricRow {
   model: string;
   real_roc_auc: number;

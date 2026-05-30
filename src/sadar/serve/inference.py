@@ -107,6 +107,36 @@ class ConformanceService:
                 return json.load(handle)
         return {"selected_model": None, "results": []}
 
+    def scene(self, count: int = 12, seed: int = 7) -> dict:
+        median = np.median(self.window_scores)
+        typical = np.argsort(np.abs(self.window_scores - median))[: max(count * 3, count + 8)]
+        rng = np.random.default_rng(seed)
+        chosen = rng.choice(typical, size=min(count, len(typical)), replace=False)
+        airlines = ["IBE", "AEA", "RYR", "VLG", "AFR", "BAW", "DLH", "KLM", "EZY", "UAE", "QTR", "AAL"]
+        flights: list[dict] = []
+        for k, flight_id in enumerate(chosen):
+            detail = self.flight_detail(int(flight_id))
+            airline = airlines[(int(flight_id) + k) % len(airlines)]
+            number = 100 + (int(flight_id) * 37) % 8900
+            callsign = f"{airline}{number}"
+            start_offset = float(rng.uniform(0, 60))
+            flights.append(
+                {
+                    "id": detail["id"],
+                    "callsign": callsign,
+                    "path": detail["path"],
+                    "scores": detail["scores"],
+                    "anomalous": bool(self.window_scores[int(flight_id)] >= self.threshold),
+                    "start_offset": start_offset,
+                }
+            )
+        return {
+            "flights": flights,
+            "step_threshold": self.step_threshold,
+            "step_seconds": self.step_seconds,
+            "center": {"lat": 40.4936, "lon": -3.5668},
+        }
+
     def flight_detail(self, flight_id: int) -> dict:
         scaled = self.test[flight_id]
         unscaled = self._unscale(scaled[None])[0]

@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { useT } from "../i18n";
 
 interface Props {
@@ -14,54 +16,76 @@ export default function ScoreTimeline({
   threshold,
   onsetIndex,
   stepSeconds = 10,
-  width = 600,
-  height = 180,
+  width,
+  height,
 }: Props) {
   const t = useT();
+  const ref = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: 600, h: 180 });
+
+  useEffect(() => {
+    if (width != null && height != null) return;
+    if (!ref.current) return;
+    const node = ref.current;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width: w, height: h } = entry.contentRect;
+        if (w <= 0 || h <= 0) continue;
+        setBox({ w: Math.max(280, w), h: Math.max(140, h) });
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [width, height]);
+
+  const w = width ?? box.w;
+  const h = height ?? box.h;
   const pad = 28;
   const count = scores.length;
   const maxScore = Math.max(threshold, ...scores) * 1.15 || 1;
-  const x = (i: number) => pad + (count > 1 ? (i / (count - 1)) * (width - 2 * pad) : 0);
-  const y = (s: number) => height - pad - (s / maxScore) * (height - 2 * pad);
+  const x = (i: number) => pad + (count > 1 ? (i / (count - 1)) * (w - 2 * pad) : 0);
+  const y = (s: number) => h - pad - (s / maxScore) * (h - 2 * pad);
   const line = scores
     .map((s, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(s).toFixed(1)}`)
     .join(" ");
   const thresholdY = y(threshold);
 
   return (
-    <svg width={width} height={height} className="panel" style={{ display: "block" }}>
-      <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="var(--panel-edge)" />
-      <line
-        x1={pad}
-        y1={thresholdY}
-        x2={width - pad}
-        y2={thresholdY}
-        stroke="var(--alert)"
-        strokeDasharray="4 3"
-      />
-      <text x={width - pad} y={thresholdY - 5} textAnchor="end" fontSize={10} fill="var(--alert)">
-        {t.timeline.threshold}
-      </text>
-      {onsetIndex != null && (
+    <div ref={ref} style={{ width: "100%", height: "100%" }}>
+      <svg width={w} height={h} className="panel" style={{ display: "block" }}>
+        <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="var(--panel-edge)" />
         <line
-          x1={x(onsetIndex)}
-          y1={pad}
-          x2={x(onsetIndex)}
-          y2={height - pad}
-          stroke="var(--warn)"
-          strokeDasharray="2 3"
+          x1={pad}
+          y1={thresholdY}
+          x2={w - pad}
+          y2={thresholdY}
+          stroke="var(--alert)"
+          strokeDasharray="4 3"
         />
-      )}
-      <path d={line} fill="none" stroke="var(--info)" strokeWidth={1.7} />
-      {scores.map((s, i) =>
-        s >= threshold ? <circle key={i} cx={x(i)} cy={y(s)} r={2.4} fill="var(--alert)" /> : null,
-      )}
-      <text x={pad} y={height - 8} fontSize={10} fill="var(--muted)">
-        0s
-      </text>
-      <text x={width - pad} y={height - 8} textAnchor="end" fontSize={10} fill="var(--muted)">
-        {(count - 1) * stepSeconds}s
-      </text>
-    </svg>
+        <text x={w - pad} y={thresholdY - 5} textAnchor="end" fontSize={10} fill="var(--alert)">
+          {t.timeline.threshold}
+        </text>
+        {onsetIndex != null && (
+          <line
+            x1={x(onsetIndex)}
+            y1={pad}
+            x2={x(onsetIndex)}
+            y2={h - pad}
+            stroke="var(--warn)"
+            strokeDasharray="2 3"
+          />
+        )}
+        <path d={line} fill="none" stroke="var(--info)" strokeWidth={1.7} />
+        {scores.map((s, i) =>
+          s >= threshold ? <circle key={i} cx={x(i)} cy={y(s)} r={2.4} fill="var(--alert)" /> : null,
+        )}
+        <text x={pad} y={h - 8} fontSize={10} fill="var(--muted)">
+          0s
+        </text>
+        <text x={w - pad} y={h - 8} textAnchor="end" fontSize={10} fill="var(--muted)">
+          {(count - 1) * stepSeconds}s
+        </text>
+      </svg>
+    </div>
   );
 }

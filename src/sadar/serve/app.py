@@ -46,6 +46,11 @@ def metrics() -> dict:
     return service.metrics()
 
 
+@app.get("/api/scene")
+def scene(count: int = 12) -> dict:
+    return service.scene(count)
+
+
 @app.get("/api/flights/{flight_id}")
 def flight(flight_id: int) -> dict:
     if flight_id < 0 or flight_id >= len(service.window_scores):
