@@ -79,15 +79,29 @@ button:hover {
   color: var(--normal);
 }
 
-.tower-backdrop {
+.backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image:
-    linear-gradient(rgba(5, 8, 13, 0.82) 0%, rgba(5, 8, 13, 0.58) 26%, rgba(5, 8, 13, 0.62) 100%),
-    url(/control-tower.jpg);
+}
+
+.backdrop__layer {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
+  opacity: 0;
+  transition: opacity 3s ease;
+}
+
+.backdrop__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(5, 8, 13, 0.82) 0%,
+    rgba(5, 8, 13, 0.6) 26%,
+    rgba(5, 8, 13, 0.64) 100%
+  );
 }
 
 .status-alert {

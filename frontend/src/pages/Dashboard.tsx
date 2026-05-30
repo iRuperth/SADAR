@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import DynamicBackdrop from "../components/DynamicBackdrop";
 import LangToggle from "../components/LangToggle";
 import { useT } from "../i18n";
 import Metrics from "./Metrics";
@@ -13,11 +14,16 @@ const TAB_IDS: Tab[] = ["monitor", "simulator", "metrics"];
 
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("monitor");
+  const [light, setLight] = useState(() => localStorage.getItem("sadar-theme") === "light");
   const t = useT();
+
+  useEffect(() => {
+    localStorage.setItem("sadar-theme", light ? "light" : "dark");
+  }, [light]);
 
   return (
     <>
-      <div className="tower-backdrop" />
+      <DynamicBackdrop light={light} />
       <div style={{ padding: 24, maxWidth: 1320, margin: "0 auto", position: "relative" }}>
         <header
           style={{
@@ -48,6 +54,11 @@ export default function Dashboard() {
             <Link to="/presentation">
               <button>{t.nav.presentation}</button>
             </Link>
+            <button onClick={() => setLight((value) => !value)} title="Day / Night">
+              <span style={{ color: light ? "var(--warn)" : "var(--muted)" }}>DAY</span>
+              <span style={{ color: "var(--muted)" }}> / </span>
+              <span style={{ color: !light ? "var(--info)" : "var(--muted)" }}>NIGHT</span>
+            </button>
             <LangToggle />
           </div>
         </header>
