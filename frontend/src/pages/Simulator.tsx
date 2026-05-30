@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   getFlight,
@@ -6,12 +6,19 @@ import {
   simulate,
   type FlightDetail,
   type FlightSummary,
+  type InjectedFlight,
   type SimulationResult,
 } from "../api";
 import AlertBanner from "../components/AlertBanner";
 import RadarPlot from "../components/RadarPlot";
 import ScoreTimeline from "../components/ScoreTimeline";
 import { useT } from "../i18n";
+
+interface SimulatorProps {
+  onInject: (flight: InjectedFlight) => void;
+  hasInjected: boolean;
+  onClearInjected: () => void;
+}
 
 interface KindConfig {
   id: string;
@@ -30,7 +37,7 @@ const KINDS: KindConfig[] = [
   { id: "freeze", min: 0, max: 0, step: 1, def: 0, unit: "" },
 ];
 
-export default function Simulator() {
+export default function Simulator({ onInject, hasInjected, onClearInjected }: SimulatorProps) {
   const t = useT();
   const [bases, setBases] = useState<FlightSummary[]>([]);
   const [baseId, setBaseId] = useState<number | null>(null);
@@ -40,6 +47,7 @@ export default function Simulator() {
   const [onset, setOnset] = useState(0.5);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const simSeedRef = useRef(1);
 
   useEffect(() => {
     getFlights(20, "typical")
@@ -76,8 +84,15 @@ export default function Simulator() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
-      <div className="panel" style={{ padding: 18, display: "grid", gap: 18, alignContent: "start" }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "280px minmax(0, 1fr) minmax(0, 1fr)",
+        gap: 14,
+        height: "calc(100vh - 110px)",
+      }}
+    >
+      <div className="panel" style={{ padding: 16, display: "grid", gap: 16, alignContent: "start", overflowY: "auto", minHeight: 0 }}>
         <div>
           <div className="label">{t.simulator.baseFlight}</div>
           <select
@@ -141,9 +156,51 @@ export default function Simulator() {
             style={{ width: "100%", marginTop: 8, accentColor: "var(--warn)" }}
           />
         </div>
+
+        <div style={{ borderTop: "1px solid var(--panel-edge)", paddingTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            disabled={!result}
+            onClick={() => {
+              if (!result) return;
+              const seed = simSeedRef.current++;
+              const injected: InjectedFlight = {
+                id: 100000 + seed,
+                callsign: "SDR001",
+                path: result.path,
+                scores: result.scores,
+                anomalous: true,
+                start_offset: 0,
+                injected: true,
+                kind: result.kind,
+              };
+              onInject(injected);
+            }}
+            style={{
+              padding: "10px",
+              borderColor: "#d96bd9",
+              color: "#d96bd9",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+            }}
+          >
+            {"> INJECT INTO MONITOR"}
+          </button>
+          {hasInjected && (
+            <button
+              onClick={onClearInjected}
+              style={{ padding: "6px", borderColor: "#d96bd9", color: "#d96bd9" }}
+            >
+              CLEAR INJECTED
+            </button>
+          )}
+          <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.04em", lineHeight: 1.4 }}>
+            Appears in the Monitor as <span style={{ color: "#d96bd9" }}>SDR001</span> within 5 s.
+            Replaces any previous injection.
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, minHeight: 0, minWidth: 0 }}>
         {result && (
           <AlertBanner
             scores={result.scores}
@@ -151,23 +208,29 @@ export default function Simulator() {
             latency={result.latency_seconds}
           />
         )}
-        <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-          {result && baseDetail && (
+        {result && baseDetail && (
+          <div className="panel" style={{ flex: 1, minHeight: 0, padding: 10 }}>
             <RadarPlot
               tracks={[
                 { points: baseDetail.path, color: "var(--muted)", label: t.simulator.original, dashed: true },
                 { points: result.path, color: "var(--alert)", label: t.simulator.injected },
               ]}
             />
-          )}
-          {result && (
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 }}>
+        <div className="label" style={{ marginBottom: 6 }}>{t.monitor.scoreTitle}</div>
+        {result && (
+          <div style={{ flex: 1, minHeight: 0 }}>
             <ScoreTimeline
               scores={result.scores}
               threshold={result.step_threshold}
               onsetIndex={result.onset_index}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
