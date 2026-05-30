@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare serve lint clean
+.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare serve web dev mlflow-ui lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -37,6 +37,15 @@ compare: ## Compare every detector and select the final model
 
 serve: ## Run the inference API for the dashboard
 	uv run uvicorn sadar.serve.app:app --port 8000
+
+web: ## Run the frontend dev server (Vite)
+	pnpm -C frontend dev
+
+dev: ## Run the backend API and the frontend dev server together
+	@trap 'kill 0' EXIT; uv run uvicorn sadar.serve.app:app --port 8000 & pnpm -C frontend dev
+
+mlflow-ui: ## Open the MLflow experiment tracking UI
+	uv run mlflow ui --backend-store-uri file:mlruns
 
 lint: ## Python linter
 	uv run ruff check src
