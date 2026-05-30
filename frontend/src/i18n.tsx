@@ -97,16 +97,16 @@ const EN: Dict = {
     explainHeader: "Air traffic control / LEMD",
     panels: [
       {
-        title: "It learns what normal looks like",
-        body: "A neural network sees thousands of ordinary approaches and departures and learns their shape.",
+        title: "From the ground, we look after every flight",
+        body: "While you fly, the control tower keeps watch, making sure your route is the one it should be.",
       },
       {
-        title: "It flags what deviates",
-        body: "Anything it cannot reconstruct, an odd route, an altitude bust, a frozen transponder, raises the score.",
+        title: "Every route checked against the pattern",
+        body: "Each approach and departure is compared with how flights normally behave, so any drift off course stands out.",
       },
       {
-        title: "You can provoke it live",
-        body: "Inject a deviation or cut the transponder and watch the alert fire, with its detection latency.",
+        title: "Deviations and incidents, caught early",
+        body: "An odd route, an altitude that does not fit, a transponder that goes silent: spotted as it begins, not after.",
       },
     ],
     opening: { kicker: "Destination", title: "Arrived safely" },
@@ -165,16 +165,16 @@ const ES: Dict = {
     explainHeader: "Control de tráfico aéreo / LEMD",
     panels: [
       {
-        title: "Aprende qué es lo normal",
-        body: "Una red neuronal ve miles de aproximaciones y despegues normales y aprende su forma.",
+        title: "Desde tierra, cuidamos de cada vuelo",
+        body: "Mientras vuelas, la torre de control vigila, asegurándose de que tu ruta es la que debe ser.",
       },
       {
-        title: "Señala lo que se desvía",
-        body: "Lo que no logra reconstruir, una ruta rara, una altitud incoherente, un transpondedor congelado, sube la puntuación.",
+        title: "Cada ruta, comparada con el patrón",
+        body: "Cada aproximación y despegue se compara con cómo vuelan normalmente, así cualquier desvío del rumbo salta a la vista.",
       },
       {
-        title: "Puedes provocarlo en vivo",
-        body: "Inyecta un desvío o corta el transpondedor y mira saltar la alerta, con su latencia de detección.",
+        title: "Desviaciones e incidencias, a tiempo",
+        body: "Una ruta rara, una altitud que no encaja, un transpondedor que se calla: se detecta en cuanto empieza, no después.",
       },
     ],
     opening: { kicker: "Destino", title: "Has llegado" },
