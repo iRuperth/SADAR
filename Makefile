@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare lint clean
+.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare serve lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -34,6 +34,9 @@ evaluate: ## Evaluate a trained autoencoder against synthetic anomalies
 
 compare: ## Compare every detector and select the final model
 	uv run sadar-compare
+
+serve: ## Run the inference API for the dashboard
+	uv run uvicorn sadar.serve.app:app --port 8000
 
 lint: ## Python linter
 	uv run ruff check src

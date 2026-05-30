@@ -1,0 +1,3 @@
+eval_config: configs/eval.yaml
+
+checkpoint: ${oc.env:SADAR_MODELS_DIR,models}/vae_lstm.pt
