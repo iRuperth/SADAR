@@ -10,7 +10,7 @@ interface Panel {
 interface Dict {
   appTitle: string;
   nav: { monitor: string; simulator: string; metrics: string; presentation: string };
-  monitor: { mostAnomalous: string; offline: string; actual: string; reconstructed: string };
+  monitor: { mostAnomalous: string; offline: string; actual: string; reconstructed: string; scoreTitle: string };
   alert: { alert: string; nominal: string; peak: string; threshold: string; latency: string };
   simulator: {
     baseFlight: string;
@@ -35,26 +35,35 @@ interface Dict {
   scenes: {
     skip: string;
     enter: string;
+    finalNav: string;
+    continueToConsole: string;
     terminal: { kicker: string; title: string; sub: string };
     jetbridge: { kicker: string; title: string };
-    cabin: { kicker: string; title: string; sub: string };
+    cabin: { kicker: string; title: string; sub?: string };
     closing: { kicker: string; title: string };
     explainHeader: string;
     panels: Panel[];
     opening: { kicker: string; title: string };
     leaving: { kicker: string; title: string };
-    ack: { kicker: string; subtitle: string };
+    ack: {
+      kicker: string;
+      subtitle: string;
+      teamHeader: string;
+      thanks: string;
+      roles: { tower1: string; pilot: string; tower2: string };
+    };
   };
 }
 
 const EN: Dict = {
-  appTitle: "FLIGHT CONFORMANCE MONITOR",
+  appTitle: "TOWER CONSOLE · LEMD-9F4C",
   nav: { monitor: "Monitor", simulator: "Simulator", metrics: "Metrics", presentation: "Presentation" },
   monitor: {
     mostAnomalous: "Most anomalous windows",
     offline: "backend offline. start it with: make serve",
     actual: "actual",
     reconstructed: "reconstructed",
+    scoreTitle: "Anomaly score",
   },
   alert: { alert: "ALERT", nominal: "NOMINAL", peak: "peak", threshold: "thr", latency: "latency" },
   simulator: {
@@ -86,13 +95,15 @@ const EN: Dict = {
   scenes: {
     skip: "Skip",
     enter: "Enter the console",
+    finalNav: "Final ▸",
+    continueToConsole: "Continue to the console",
     terminal: {
       kicker: "Madrid Barajas / LEMD",
       title: "You walk through the terminal",
       sub: "Every day, around a thousand flights follow the same quiet pattern.",
     },
     jetbridge: { kicker: "Boarding", title: "Down the jet bridge" },
-    cabin: { kicker: "On board", title: "Take your seat", sub: "Lower the window shade." },
+    cabin: { kicker: "On board", title: "Take your seat" },
     closing: { kicker: "Doors closed", title: "The flight begins" },
     explainHeader: "Air traffic control / LEMD",
     panels: [
@@ -102,7 +113,7 @@ const EN: Dict = {
       },
       {
         title: "Every route checked against the pattern",
-        body: "We watch over your flight from start to finish, and any drift off the usual course stands out.",
+        body: "We watch over your flight from start to finish, and anything that breaks the rhythm of flight stands out.",
       },
       {
         title: "Deviations and incidents, caught early",
@@ -111,18 +122,29 @@ const EN: Dict = {
     ],
     opening: { kicker: "Destination", title: "Arrived safely" },
     leaving: { kicker: "Conformance confirmed", title: "You walk out" },
-    ack: { kicker: "Thank you", subtitle: "Smart Anomaly Detection for Aviation Routes" },
+    ack: {
+      kicker: "Thank you",
+      subtitle: "Smart Anomaly Detection for Aviation Routes",
+      teamHeader: "The team",
+      thanks: "Thank you.",
+      roles: {
+        tower1: "Approach controller",
+        pilot: "Pilot",
+        tower2: "Tower controller",
+      },
+    },
   },
 };
 
 const ES: Dict = {
-  appTitle: "MONITOR DE CONFORMIDAD DE VUELOS",
+  appTitle: "TOWER CONSOLE · LEMD-9F4C",
   nav: { monitor: "Monitor", simulator: "Simulador", metrics: "Métricas", presentation: "Presentación" },
   monitor: {
     mostAnomalous: "Ventanas más anómalas",
     offline: "backend apagado. arráncalo con: make serve",
     actual: "real",
     reconstructed: "reconstruido",
+    scoreTitle: "Score de anomalía",
   },
   alert: { alert: "ALERTA", nominal: "NORMAL", peak: "pico", threshold: "umbral", latency: "latencia" },
   simulator: {
@@ -154,13 +176,15 @@ const ES: Dict = {
   scenes: {
     skip: "Saltar",
     enter: "Entrar a la consola",
+    finalNav: "Final ▸",
+    continueToConsole: "Continuar a la consola",
     terminal: {
       kicker: "Madrid Barajas / LEMD",
       title: "Cruzas la terminal",
       sub: "Cada día, unos mil vuelos siguen el mismo patrón tranquilo.",
     },
     jetbridge: { kicker: "Embarque", title: "Por el pasillo de embarque" },
-    cabin: { kicker: "A bordo", title: "Toma asiento", sub: "Baja la persiana de la ventanilla." },
+    cabin: { kicker: "A bordo", title: "Toma asiento" },
     closing: { kicker: "Puertas cerradas", title: "Comienza el vuelo" },
     explainHeader: "Control de tráfico aéreo / LEMD",
     panels: [
@@ -170,7 +194,7 @@ const ES: Dict = {
       },
       {
         title: "Cada ruta, comparada con el patrón",
-        body: "Vigilamos tu vuelo de principio a fin, y cualquier desvío del rumbo habitual salta a la vista.",
+        body: "Vigilamos tu vuelo de principio a fin, y todo lo que rompa la cadencia del vuelo salta a la vista.",
       },
       {
         title: "Desviaciones e incidencias, a tiempo",
@@ -179,7 +203,17 @@ const ES: Dict = {
     ],
     opening: { kicker: "Destino", title: "Has llegado" },
     leaving: { kicker: "Conformidad confirmada", title: "Sales caminando" },
-    ack: { kicker: "Gracias", subtitle: "Detección inteligente de anomalías en rutas aéreas" },
+    ack: {
+      kicker: "",
+      subtitle: "Detección inteligente de anomalías en rutas aéreas",
+      teamHeader: "El equipo",
+      thanks: "Gracias.",
+      roles: {
+        tower1: "Control de aproximación",
+        pilot: "Piloto",
+        tower2: "Control de torre",
+      },
+    },
   },
 };
 
@@ -191,7 +225,7 @@ interface LangContextValue {
   toggle: () => void;
 }
 
-const LangContext = createContext<LangContextValue>({ lang: "en", setLang: () => {}, toggle: () => {} });
+const LangContext = createContext<LangContextValue>({ lang: "en", setLang: () => { }, toggle: () => { } });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {

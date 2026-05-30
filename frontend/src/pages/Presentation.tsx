@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import LangToggle from "../components/LangToggle";
 import { useT } from "../i18n";
@@ -8,6 +8,12 @@ import "./presentation.css";
 
 type Progress = MotionValue<number>;
 type Range = [number, number];
+
+const TEAM = [
+  { roleKey: "tower1", name: "Nombre Apellido" },
+  { roleKey: "pilot", name: "Nombre Apellido" },
+  { roleKey: "tower2", name: "Nombre Apellido" },
+] as const;
 
 function useReveal(progress: Progress, range: Range, first = false): MotionValue<number> {
   const [start, end] = range;
@@ -76,12 +82,6 @@ function WindowScene({
   );
 }
 
-const PANEL_RANGES: Range[] = [
-  [0.51, 0.57],
-  [0.57, 0.63],
-  [0.63, 0.68],
-];
-
 function ExplainPanel({
   progress,
   range,
@@ -106,11 +106,13 @@ function ExplainPanel({
 function Explain({
   progress,
   range,
+  panelRanges,
   header,
   panels,
 }: {
   progress: Progress;
   range: Range;
+  panelRanges: Range[];
   header: string;
   panels: { title: string; body: string }[];
 }) {
@@ -124,7 +126,7 @@ function Explain({
           <ExplainPanel
             key={index}
             progress={progress}
-            range={PANEL_RANGES[index]}
+            range={panelRanges[index]}
             title={panel.title}
             body={panel.body}
           />
@@ -134,47 +136,32 @@ function Explain({
   );
 }
 
-function Acknowledgements({
-  progress,
-  range,
-  kicker,
-  subtitle,
-  enter,
-}: {
-  progress: Progress;
-  range: Range;
-  kicker: string;
-  subtitle: string;
-  enter: string;
-}) {
-  const opacity = useReveal(progress, range);
-  const textOpacity = useTransform(progress, [range[0] + 0.03, range[0] + 0.08], [0, 1]);
-  return (
-    <motion.div
-      className="scene"
-      style={{ opacity, backgroundImage: "url(/presentation/acknowledgements.jpg)" }}
-    >
-      <div className="scene__veil" />
-      <motion.div className="ack" style={{ opacity: textOpacity }}>
-        <div className="scene__kicker">{kicker}</div>
-        <div className="ack__title">SADAR</div>
-        <p className="scene__sub">{subtitle}</p>
-        <Link to="/" style={{ marginTop: 18 }}>
-          <button>{enter}</button>
-        </Link>
-      </motion.div>
-    </motion.div>
-  );
-}
+const INTRO_PANEL_RANGES: Range[] = [
+  [0.51, 0.62],
+  [0.62, 0.74],
+  [0.74, 0.86],
+];
 
 export default function Presentation() {
   const t = useT();
   const s = t.scenes;
   const trackRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const handedOffRef = useRef(false);
   const { scrollYProgress } = useScroll({
     target: trackRef,
     offset: ["start start", "end end"],
   });
+
+  useEffect(() => {
+    const unsub = scrollYProgress.on("change", (value) => {
+      if (value > 0.96 && !handedOffRef.current) {
+        handedOffRef.current = true;
+        navigate("/");
+      }
+    });
+    return () => unsub();
+  }, [scrollYProgress, navigate]);
 
   return (
     <div className="presentation">
@@ -192,7 +179,7 @@ export default function Presentation() {
         <div className="stage">
           <ImageScene
             progress={scrollYProgress}
-            range={[0, 0.12]}
+            range={[0, 0.14]}
             first
             image="terminal.jpg"
             kicker={s.terminal.kicker}
@@ -201,14 +188,14 @@ export default function Presentation() {
           />
           <ImageScene
             progress={scrollYProgress}
-            range={[0.11, 0.24]}
+            range={[0.13, 0.28]}
             image="jetbridge.jpg"
             kicker={s.jetbridge.kicker}
             title={s.jetbridge.title}
           />
           <ImageScene
             progress={scrollYProgress}
-            range={[0.23, 0.36]}
+            range={[0.27, 0.42]}
             image="cabin.jpg"
             kicker={s.cabin.kicker}
             title={s.cabin.title}
@@ -216,40 +203,199 @@ export default function Presentation() {
           />
           <WindowScene
             progress={scrollYProgress}
-            range={[0.35, 0.49]}
+            range={[0.41, 0.52]}
             closing
             kicker={s.closing.kicker}
             title={s.closing.title}
           />
           <Explain
             progress={scrollYProgress}
-            range={[0.48, 0.69]}
+            range={[0.5, 0.92]}
+            panelRanges={INTRO_PANEL_RANGES}
             header={s.explainHeader}
             panels={s.panels}
           />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PresentationFinal() {
+  const t = useT();
+  const s = t.scenes;
+  const trackRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: trackRef,
+    offset: ["start start", "end end"],
+  });
+  const [creditsVisible, setCreditsVisible] = useState(false);
+
+  useEffect(() => {
+    const unsub = scrollYProgress.on("change", (value) => {
+      setCreditsVisible(value > 0.88);
+    });
+    return () => unsub();
+  }, [scrollYProgress]);
+
+  return (
+    <div className="presentation">
+      <motion.div
+        className="presentation__progress"
+        style={{ scaleX: scrollYProgress, width: "100%" }}
+      />
+      <div className="presentation__skip" style={{ display: "flex", gap: 8 }}>
+        <LangToggle />
+        <Link to="/">
+          <button>{s.skip}</button>
+        </Link>
+      </div>
+      <div className="presentation__track" ref={trackRef}>
+        <div className="stage">
           <WindowScene
             progress={scrollYProgress}
-            range={[0.68, 0.8]}
+            range={[0, 0.34]}
             closing={false}
             kicker={s.opening.kicker}
             title={s.opening.title}
           />
           <ImageScene
             progress={scrollYProgress}
-            range={[0.79, 0.9]}
+            range={[0.33, 0.66]}
             image="leaving.jpg"
             kicker={s.leaving.kicker}
             title={s.leaving.title}
           />
-          <Acknowledgements
+          <Credits
             progress={scrollYProgress}
-            range={[0.89, 1.0]}
-            kicker={s.ack.kicker}
+            range={[0.65, 1.0]}
+            roles={s.ack.roles}
+            teamHeader={s.ack.teamHeader}
+            thanks={s.ack.thanks}
             subtitle={s.ack.subtitle}
-            enter={s.enter}
+            visible={creditsVisible}
           />
         </div>
       </div>
     </div>
+  );
+}
+
+function Credits({
+  progress,
+  range,
+  roles,
+  teamHeader,
+  thanks,
+  subtitle,
+  visible,
+}: {
+  progress: Progress;
+  range: Range;
+  roles: { tower1: string; pilot: string; tower2: string };
+  teamHeader: string;
+  thanks: string;
+  subtitle: string;
+  visible: boolean;
+}) {
+  const [start, end] = range;
+  const pad = Math.min(0.04, (end - start) / 3);
+  const opacity = useTransform(progress, [start, start + pad], [0, 1]);
+  const textOpacity = useTransform(progress, [start + 0.03, start + 0.1], [0, 1]);
+  return (
+    <motion.div
+      className="scene"
+      style={{ opacity, backgroundImage: "url(/presentation/acknowledgements.jpg)" }}
+    >
+      <div className="scene__veil" />
+      <motion.div
+        className="ack"
+        style={{
+          opacity: textOpacity,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 18,
+          textAlign: "center",
+          padding: "24px",
+        }}
+      >
+        <img
+          src="/sadar-logo.png"
+          alt="SADAR"
+          className="radar-pulse"
+          style={{ width: "min(440px, 70vw)", height: "auto", display: "block" }}
+        />
+        <p className="scene__sub" style={{ marginTop: 0 }}>{subtitle}</p>
+
+        <div
+          style={{
+            marginTop: 24,
+            fontFamily: "var(--mono)",
+            fontSize: 13,
+            letterSpacing: "0.32em",
+            textTransform: "uppercase",
+            color: "#ffffff",
+            textShadow: "0 1px 6px rgba(0,0,0,0.85)",
+          }}
+        >
+          {teamHeader}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 22,
+            marginTop: 10,
+            opacity: visible ? 1 : 0,
+            transition: "opacity 600ms ease",
+          }}
+        >
+          {TEAM.map((member, idx) => (
+            <div key={idx} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div
+                style={{
+                  fontFamily: "var(--mono)",
+                  fontSize: 12,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  color: "#7fd1c6",
+                  textShadow: "0 1px 5px rgba(0,0,0,0.85)",
+                }}
+              >
+                {roles[member.roleKey]}
+              </div>
+              <div
+                className="radar-name-pulse"
+                style={{
+                  fontFamily: "var(--mono)",
+                  fontSize: 22,
+                  letterSpacing: "0.1em",
+                  color: "#ffffff",
+                  animationDelay: `${idx * 0.4}s`,
+                }}
+              >
+                {member.name}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            marginTop: 32,
+            fontFamily: "var(--mono)",
+            fontSize: 16,
+            letterSpacing: "0.2em",
+            color: "#7fd1c6",
+            textTransform: "uppercase",
+            textShadow: "0 1px 6px rgba(0,0,0,0.85)",
+          }}
+        >
+          {thanks}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
