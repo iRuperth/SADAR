@@ -102,6 +102,26 @@ def _run_epoch(
     return total / count
 
 
+def _start_tracking(model_meta: dict, training_cfg: dict):
+    # Open an MLflow run for a tagged training and record its configuration.
+    # Returns the mlflow module while tracking, or None to skip it (the Optuna
+    # search trains without a tag so it stays out of the experiment log).
+    arch = model_meta.get("arch")
+    if arch is None:
+        return None
+    import mlflow
+
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "file:mlruns"))
+    mlflow.set_experiment(os.environ.get("SADAR_MLFLOW_EXPERIMENT", "sadar"))
+    mlflow.start_run(run_name=arch)
+    params = {f"train.{key}": value for key, value in training_cfg.items()}
+    params.update({f"model.{key}": value for key, value in model_meta.get("model", {}).items()})
+    params["arch"] = arch
+    params["n_features"] = model_meta.get("n_features")
+    mlflow.log_params(params)
+    return mlflow
+
+
 def fit(
     model: nn.Module,
     train_windows: np.ndarray,
@@ -133,36 +153,47 @@ def fit(
         optimizer, factor=training_cfg["lr_factor"], patience=training_cfg["lr_patience"]
     )
 
+    tracker = _start_tracking(model_meta, training_cfg)
     best_val = float("inf")
     best_state = None
     epochs_without_improvement = 0
 
-    for epoch in range(1, training_cfg["epochs"] + 1):
-        train_loss = _run_epoch(model, train_loader, loss_fn, device, optimizer)
-        val_loss = _run_epoch(model, val_loader, loss_fn, device)
-        scheduler.step(val_loss)
-        print(f"epoch {epoch:02d} | train {train_loss:.5f} | val {val_loss:.5f}")
+    try:
+        for epoch in range(1, training_cfg["epochs"] + 1):
+            train_loss = _run_epoch(model, train_loader, loss_fn, device, optimizer)
+            val_loss = _run_epoch(model, val_loader, loss_fn, device)
+            scheduler.step(val_loss)
+            print(f"epoch {epoch:02d} | train {train_loss:.5f} | val {val_loss:.5f}")
+            if tracker is not None:
+                tracker.log_metric("train_loss", train_loss, step=epoch)
+                tracker.log_metric("val_loss", val_loss, step=epoch)
 
-        if val_loss < best_val:
-            best_val = val_loss
-            best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
-            epochs_without_improvement = 0
-        else:
-            epochs_without_improvement += 1
-            if epochs_without_improvement >= training_cfg["patience"]:
-                print(f"early stopping at epoch {epoch}")
-                break
+            if val_loss < best_val:
+                best_val = val_loss
+                best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
+                if epochs_without_improvement >= training_cfg["patience"]:
+                    print(f"early stopping at epoch {epoch}")
+                    break
 
-    if best_state is not None:
-        model.load_state_dict(best_state)
+        if best_state is not None:
+            model.load_state_dict(best_state)
 
-    # Hyperparameter search reuses this loop with checkpoint_path=None to train a
-    # candidate without writing it to disk.
-    if checkpoint_path is not None:
-        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
-        payload = {"state_dict": model.state_dict(), **model_meta}
-        torch.save(payload, checkpoint_path)
-    return best_val
+        # Hyperparameter search reuses this loop with checkpoint_path=None to train
+        # a candidate without writing it to disk.
+        if checkpoint_path is not None:
+            os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+            payload = {"state_dict": model.state_dict(), **model_meta}
+            torch.save(payload, checkpoint_path)
+
+        if tracker is not None:
+            tracker.log_metric("best_val_loss", best_val)
+        return best_val
+    finally:
+        if tracker is not None:
+            tracker.end_run()
 
 
 def _build_lstm(n_features: int, cfg: dict) -> LSTMAutoencoder:

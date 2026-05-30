@@ -7,6 +7,7 @@ __pycache__/
 /data/
 /models/
 /reports/
+/mlruns/
 .DS_Store
 .vscode/
 .idea/
