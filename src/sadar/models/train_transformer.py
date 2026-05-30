@@ -4,8 +4,8 @@ import argparse
 import os
 
 from sadar.data.pipeline import load_config
-from sadar.models.lstm_autoencoder import LSTMAutoencoder
 from sadar.models.training import fit, load_windows, resolve_device, set_seeds
+from sadar.models.transformer_autoencoder import TransformerAutoencoder
 
 
 def train(config: dict) -> dict:
@@ -18,17 +18,20 @@ def train(config: dict) -> dict:
     n_features = train_windows.shape[2]
 
     model_cfg = config["model"]
-    model = LSTMAutoencoder(
+    model = TransformerAutoencoder(
         n_features=n_features,
-        hidden_size=model_cfg["hidden_size"],
-        latent_size=model_cfg["latent_size"],
+        d_model=model_cfg["d_model"],
+        nhead=model_cfg["nhead"],
         num_layers=model_cfg["num_layers"],
+        dim_feedforward=model_cfg["dim_feedforward"],
+        latent_size=model_cfg["latent_size"],
         dropout=model_cfg["dropout"],
+        max_len=model_cfg["max_len"],
     )
 
     output_cfg = config["output"]
     checkpoint_path = os.path.join(output_cfg["dir"], output_cfg["checkpoint"])
-    meta = {"arch": "lstm", "model": model_cfg, "n_features": n_features}
+    meta = {"arch": "transformer", "model": model_cfg, "n_features": n_features}
     best_val = fit(
         model, train_windows, val_windows, config["training"], checkpoint_path, meta, device
     )
@@ -36,8 +39,10 @@ def train(config: dict) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train the LSTM autoencoder on normal flights.")
-    parser.add_argument("--config", default="configs/lstm.yaml")
+    parser = argparse.ArgumentParser(
+        description="Train the Transformer autoencoder on normal flights."
+    )
+    parser.add_argument("--config", default="configs/transformer.yaml")
     args = parser.parse_args()
 
     result = train(load_config(args.config))

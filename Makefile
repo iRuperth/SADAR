@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline train-lstm evaluate lint clean
+.PHONY: help install notebook preprocess baseline train-lstm train-transformer evaluate lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -20,7 +20,10 @@ baseline: ## Fit and evaluate the Isolation Forest baseline
 train-lstm: ## Train the LSTM autoencoder on the normal flights
 	uv run sadar-train-lstm
 
-evaluate: ## Evaluate the LSTM against synthetic anomalies
+train-transformer: ## Train the Transformer autoencoder on the normal flights
+	uv run sadar-train-transformer
+
+evaluate: ## Evaluate a trained autoencoder against synthetic anomalies
 	uv run sadar-evaluate
 
 lint: ## Python linter

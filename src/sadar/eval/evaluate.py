@@ -10,8 +10,8 @@ from sadar.data.pipeline import load_config
 from sadar.data.scaling import StandardScaler3D
 from sadar.eval import synthetic
 from sadar.models.baseline import IsolationForestBaseline
-from sadar.models.train_lstm import (
-    load_lstm,
+from sadar.models.training import (
+    load_autoencoder,
     per_step_error,
     reconstruction_error,
     resolve_device,
@@ -81,7 +81,7 @@ def run(config: dict) -> list[dict]:
     val = _load(processed_dir, "val.npy")
     test = _load(processed_dir, "test.npy")
 
-    model = load_lstm(config["model"]["checkpoint"], device)
+    model = load_autoencoder(config["model"]["checkpoint"], device)
 
     baseline_cfg = load_config(config["baseline_config"])["isolation_forest"]
     baseline = IsolationForestBaseline(
@@ -117,7 +117,7 @@ def run(config: dict) -> list[dict]:
         base_scores = baseline.score(scaled)
 
         labels = np.concatenate([np.zeros(len(normal_scores)), np.ones(len(scores))])
-        lstm_roc = roc_auc_score(labels, np.concatenate([normal_scores, scores]))
+        model_roc = roc_auc_score(labels, np.concatenate([normal_scores, scores]))
         base_roc = roc_auc_score(labels, np.concatenate([base_normal_scores, base_scores]))
 
         step_error = per_step_error(model, scaled, device)
@@ -126,9 +126,9 @@ def run(config: dict) -> list[dict]:
         results.append({
             "kind": kind,
             "intensity": label,
-            "lstm_roc_auc": float(lstm_roc),
+            "model_roc_auc": float(model_roc),
             "baseline_roc_auc": float(base_roc),
-            "lstm_detection": float((scores >= threshold).mean()),
+            "model_detection": float((scores >= threshold).mean()),
             "median_normal": float(np.median(normal_scores)),
             "median_anomaly": float(np.median(scores)),
             "latency_seconds": latency,
@@ -143,7 +143,7 @@ def run(config: dict) -> list[dict]:
 
 def _print_table(results: list[dict]) -> None:
     header = (
-        f"{'anomaly':<16}{'intensity':<12}{'LSTM ROC':>9}{'base ROC':>9}"
+        f"{'anomaly':<16}{'intensity':<12}{'model ROC':>10}{'base ROC':>9}"
         f"{'detect':>8}{'latency':>9}{'within':>8}"
     )
     print(header)
@@ -152,20 +152,25 @@ def _print_table(results: list[dict]) -> None:
         latency = "n/a" if np.isnan(row["latency_seconds"]) else f"{row['latency_seconds']:.0f}s"
         print(
             f"{row['kind']:<16}{row['intensity']:<12}"
-            f"{row['lstm_roc_auc']:>9.3f}{row['baseline_roc_auc']:>9.3f}"
-            f"{row['lstm_detection']:>8.1%}{latency:>9}{row['detected_within_window']:>8.1%}"
+            f"{row['model_roc_auc']:>10.3f}{row['baseline_roc_auc']:>9.3f}"
+            f"{row['model_detection']:>8.1%}{latency:>9}{row['detected_within_window']:>8.1%}"
         )
     print(f"\nnormal false-alarm rate at threshold: {results[0]['normal_fpr']:.1%}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Evaluate the LSTM autoencoder against synthetic anomalies."
+        description="Evaluate a trained autoencoder against synthetic anomalies."
     )
     parser.add_argument("--config", default="configs/eval.yaml")
+    parser.add_argument("--checkpoint", default=None)
     args = parser.parse_args()
 
-    results = run(load_config(args.config))
+    config = load_config(args.config)
+    if args.checkpoint is not None:
+        config["model"]["checkpoint"] = args.checkpoint
+
+    results = run(config)
     _print_table(results)
 
 
