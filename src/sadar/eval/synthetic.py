@@ -140,3 +140,41 @@ def holding_pattern(
     if vertrate_index is not None:
         out[:, start:, vertrate_index] = 0.0
     return out, _mask_from(length, start, n)
+
+
+def build_cases(
+    normal_unscaled: np.ndarray,
+    indices: dict,
+    onset_fraction: float,
+    step_seconds: float,
+    rng: np.random.Generator,
+    synthetic_cfg: dict,
+) -> list[tuple]:
+    cases = []
+    for magnitude in synthetic_cfg["route_deviation"]["magnitudes_m"]:
+        windows, mask = route_deviation(
+            normal_unscaled, indices["x_rel"], indices["y_rel"], magnitude, onset_fraction, rng
+        )
+        cases.append(("route_deviation", f"{magnitude:g} m", windows, mask))
+    for magnitude in synthetic_cfg["altitude"]["magnitudes_m"]:
+        windows, mask = altitude_anomaly(
+            normal_unscaled, indices["baroaltitude"], magnitude, onset_fraction, rng,
+            indices.get("vertrate"), step_seconds,
+        )
+        cases.append(("altitude", f"{magnitude:g} m", windows, mask))
+    for factor in synthetic_cfg["speed"]["factors"]:
+        windows, mask = speed_anomaly(
+            normal_unscaled, indices["velocity"], factor, onset_fraction, rng
+        )
+        cases.append(("speed", f"x{factor:g}", windows, mask))
+    for period in synthetic_cfg["holding"]["turn_periods_s"]:
+        windows, mask = holding_pattern(
+            normal_unscaled, indices["x_rel"], indices["y_rel"], indices["sin_hdg"],
+            indices["cos_hdg"], indices["velocity"], onset_fraction, period, rng,
+            indices.get("vertrate"), step_seconds,
+        )
+        cases.append(("holding", f"{period:g} s/turn", windows, mask))
+    if synthetic_cfg["freeze"]["enabled"]:
+        windows, mask = sensor_freeze(normal_unscaled, onset_fraction, rng)
+        cases.append(("freeze", "stuck", windows, mask))
+    return cases

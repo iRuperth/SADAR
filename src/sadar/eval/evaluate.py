@@ -22,37 +22,6 @@ def _load(processed_dir: str, name: str) -> np.ndarray:
     return np.load(os.path.join(processed_dir, name))
 
 
-def _generate(normal_unscaled, indices, onset, step_seconds, rng, synthetic_cfg):
-    out = []
-    for magnitude in synthetic_cfg["route_deviation"]["magnitudes_m"]:
-        windows, mask = synthetic.route_deviation(
-            normal_unscaled, indices["x_rel"], indices["y_rel"], magnitude, onset, rng
-        )
-        out.append(("route_deviation", f"{magnitude:g} m", windows, mask))
-    for magnitude in synthetic_cfg["altitude"]["magnitudes_m"]:
-        windows, mask = synthetic.altitude_anomaly(
-            normal_unscaled, indices["baroaltitude"], magnitude, onset, rng,
-            indices.get("vertrate"), step_seconds,
-        )
-        out.append(("altitude", f"{magnitude:g} m", windows, mask))
-    for factor in synthetic_cfg["speed"]["factors"]:
-        windows, mask = synthetic.speed_anomaly(
-            normal_unscaled, indices["velocity"], factor, onset, rng
-        )
-        out.append(("speed", f"x{factor:g}", windows, mask))
-    for period in synthetic_cfg["holding"]["turn_periods_s"]:
-        windows, mask = synthetic.holding_pattern(
-            normal_unscaled, indices["x_rel"], indices["y_rel"], indices["sin_hdg"],
-            indices["cos_hdg"], indices["velocity"], onset, period, rng,
-            indices.get("vertrate"), step_seconds,
-        )
-        out.append(("holding", f"{period:g} s/turn", windows, mask))
-    if synthetic_cfg["freeze"]["enabled"]:
-        windows, mask = synthetic.sensor_freeze(normal_unscaled, onset, rng)
-        out.append(("freeze", "stuck", windows, mask))
-    return out
-
-
 def _latency_seconds(step_error, onset_idx, step_threshold, step_seconds):
     exceed = step_error[:, onset_idx:] >= step_threshold
     detected = exceed.any(axis=1)
@@ -108,7 +77,9 @@ def run(config: dict) -> list[dict]:
 
     onset = config["synthetic"]["onset_fraction"]
     onset_idx = synthetic.onset_index(sample.shape[1], onset)
-    cases = _generate(normal_unscaled, indices, onset, step_seconds, rng, config["synthetic"])
+    cases = synthetic.build_cases(
+        normal_unscaled, indices, onset, step_seconds, rng, config["synthetic"]
+    )
 
     results = []
     for kind, label, perturbed, _mask in cases:

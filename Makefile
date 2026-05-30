@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae evaluate lint clean
+.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae evaluate compare lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -28,6 +28,9 @@ train-vae: ## Train the VAE-LSTM on the normal flights
 
 evaluate: ## Evaluate a trained autoencoder against synthetic anomalies
 	uv run sadar-evaluate
+
+compare: ## Compare every detector and select the final model
+	uv run sadar-compare
 
 lint: ## Python linter
 	uv run ruff check src
