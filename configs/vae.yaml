@@ -5,16 +5,16 @@ data:
 
 model:
   hidden_size: 64
-  latent_size: 16
+  latent_size: 8
   num_layers: 1
-  dropout: 0.1
-  beta: 0.001
+  dropout: 0.1488
+  beta: 0.0001193
 
 training:
   epochs: 50
   batch_size: 256
-  learning_rate: 0.001
-  weight_decay: 0.0001
+  learning_rate: 0.001436
+  weight_decay: 0.0000054741
   patience: 7
   lr_factor: 0.5
   lr_patience: 3
