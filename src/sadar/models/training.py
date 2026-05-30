@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from sadar.models.lstm_autoencoder import LSTMAutoencoder
 from sadar.models.transformer_autoencoder import TransformerAutoencoder
+from sadar.models.vae_lstm import VAELSTM
 
 
 def resolve_device(requested: str) -> torch.device:
@@ -68,10 +69,17 @@ def per_step_error(
     return np.concatenate(chunks)
 
 
+def reconstruction_loss(model: nn.Module, batch: torch.Tensor) -> torch.Tensor:
+    # Default training objective: rebuild the input and penalise the squared
+    # error. Models with their own objective (the VAE adds a KL term) pass a
+    # different loss function to fit().
+    return nn.functional.mse_loss(model(batch), batch)
+
+
 def _run_epoch(
     model: nn.Module,
     loader: DataLoader,
-    criterion: nn.Module,
+    loss_fn,
     device: torch.device,
     optimizer: torch.optim.Optimizer | None = None,
 ) -> float:
@@ -84,7 +92,7 @@ def _run_epoch(
     with torch.set_grad_enabled(training):
         for (batch,) in loader:
             batch = batch.to(device)
-            loss = criterion(model(batch), batch)
+            loss = loss_fn(model, batch)
             if training:
                 optimizer.zero_grad()
                 loss.backward()
@@ -102,16 +110,20 @@ def fit(
     checkpoint_path: str,
     model_meta: dict,
     device: torch.device,
+    loss_fn=None,
 ) -> float:
     # Shared autoencoder training loop reused by every deep model: Adam with
-    # weight decay, MSE reconstruction loss, a plateau learning-rate scheduler
-    # and early stopping on the validation loss. The best weights are saved with
-    # the metadata needed to rebuild the model later.
+    # weight decay, a plateau learning-rate scheduler and early stopping on the
+    # validation loss. The objective defaults to reconstruction error; the VAE
+    # passes its own loss. The best weights are saved with the metadata needed to
+    # rebuild the model later.
+    if loss_fn is None:
+        loss_fn = reconstruction_loss
+
     train_loader = make_loader(train_windows, training_cfg["batch_size"], shuffle=True)
     val_loader = make_loader(val_windows, training_cfg["batch_size"], shuffle=False)
 
     model = model.to(device)
-    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=training_cfg["learning_rate"],
@@ -126,8 +138,8 @@ def fit(
     epochs_without_improvement = 0
 
     for epoch in range(1, training_cfg["epochs"] + 1):
-        train_loss = _run_epoch(model, train_loader, criterion, device, optimizer)
-        val_loss = _run_epoch(model, val_loader, criterion, device)
+        train_loss = _run_epoch(model, train_loader, loss_fn, device, optimizer)
+        val_loss = _run_epoch(model, val_loader, loss_fn, device)
         scheduler.step(val_loss)
         print(f"epoch {epoch:02d} | train {train_loss:.5f} | val {val_loss:.5f}")
 
@@ -173,7 +185,18 @@ def _build_transformer(n_features: int, cfg: dict) -> TransformerAutoencoder:
     )
 
 
-_BUILDERS = {"lstm": _build_lstm, "transformer": _build_transformer}
+def _build_vae(n_features: int, cfg: dict) -> VAELSTM:
+    return VAELSTM(
+        n_features=n_features,
+        hidden_size=cfg["hidden_size"],
+        latent_size=cfg["latent_size"],
+        num_layers=cfg["num_layers"],
+        dropout=cfg["dropout"],
+        beta=cfg["beta"],
+    )
+
+
+_BUILDERS = {"lstm": _build_lstm, "transformer": _build_transformer, "vae": _build_vae}
 
 
 def load_autoencoder(checkpoint_path: str, device: torch.device) -> nn.Module:

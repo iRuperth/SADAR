@@ -3,8 +3,10 @@ from sadar.models import (
     lstm_autoencoder,
     train_lstm,
     train_transformer,
+    train_vae,
     training,
     transformer_autoencoder,
+    vae_lstm,
 )
 
 __all__ = [
@@ -12,6 +14,8 @@ __all__ = [
     "lstm_autoencoder",
     "train_lstm",
     "train_transformer",
+    "train_vae",
     "training",
     "transformer_autoencoder",
+    "vae_lstm",
 ]

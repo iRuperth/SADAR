@@ -21,6 +21,7 @@ sadar-preprocess = "sadar.data.pipeline:main"
 sadar-baseline = "sadar.models.baseline:main"
 sadar-train-lstm = "sadar.models.train_lstm:main"
 sadar-train-transformer = "sadar.models.train_transformer:main"
+sadar-train-vae = "sadar.models.train_vae:main"
 sadar-evaluate = "sadar.eval.evaluate:main"
 
 [dependency-groups]
