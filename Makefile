@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae evaluate compare lint clean
+.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare lint clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -25,6 +25,9 @@ train-transformer: ## Train the Transformer autoencoder on the normal flights
 
 train-vae: ## Train the VAE-LSTM on the normal flights
 	uv run sadar-train-vae
+
+tune-vae: ## Search VAE-LSTM hyperparameters with Optuna
+	uv run sadar-tune-vae
 
 evaluate: ## Evaluate a trained autoencoder against synthetic anomalies
 	uv run sadar-evaluate

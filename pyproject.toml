@@ -14,6 +14,7 @@ dependencies = [
     "geopy>=2.4",
     "pyproj>=3.6",
     "torch>=2.2",
+    "optuna>=4.8.0",
 ]
 
 [project.scripts]
@@ -22,6 +23,7 @@ sadar-baseline = "sadar.models.baseline:main"
 sadar-train-lstm = "sadar.models.train_lstm:main"
 sadar-train-transformer = "sadar.models.train_transformer:main"
 sadar-train-vae = "sadar.models.train_vae:main"
+sadar-tune-vae = "sadar.models.tune_vae:main"
 sadar-evaluate = "sadar.eval.evaluate:main"
 sadar-compare = "sadar.eval.compare:main"
 

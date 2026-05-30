@@ -156,9 +156,12 @@ def fit(
     if best_state is not None:
         model.load_state_dict(best_state)
 
-    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
-    payload = {"state_dict": model.state_dict(), **model_meta}
-    torch.save(payload, checkpoint_path)
+    # Hyperparameter search reuses this loop with checkpoint_path=None to train a
+    # candidate without writing it to disk.
+    if checkpoint_path is not None:
+        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+        payload = {"state_dict": model.state_dict(), **model_meta}
+        torch.save(payload, checkpoint_path)
     return best_val
 
 

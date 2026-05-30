@@ -1,0 +1,44 @@
+seed: 42
+
+data:
+  processed_dir: ${oc.env:SADAR_PROCESSED_DIR,data/processed}
+
+preprocessing_config: configs/preprocessing.yaml
+
+n_trials: 20
+
+search_space:
+  hidden_size: [32, 64, 128]
+  latent_size: [8, 16, 32]
+  num_layers: [1, 2]
+  dropout: [0.0, 0.3]
+  beta: [0.0001, 0.1]
+  learning_rate: [0.0003, 0.003]
+  weight_decay: [0.000001, 0.001]
+
+synthetic:
+  sample_size: 1500
+  onset_fraction: 0.5
+  route_deviation:
+    magnitudes_m: [20000, 40000, 80000]
+  altitude:
+    magnitudes_m: [300, 800, 1500]
+  speed:
+    factors: [1.6, 2.2, 0.4]
+  holding:
+    turn_periods_s: [240, 120]
+  freeze:
+    enabled: true
+
+training:
+  epochs: 30
+  batch_size: 256
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  patience: 6
+  lr_factor: 0.5
+  lr_patience: 3
+  device: auto
+
+output:
+  path: ${oc.env:SADAR_REPORTS_DIR,reports}/vae_tuning.json

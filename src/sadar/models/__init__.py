@@ -6,6 +6,7 @@ from sadar.models import (
     train_vae,
     training,
     transformer_autoencoder,
+    tune_vae,
     vae_lstm,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "train_vae",
     "training",
     "transformer_autoencoder",
+    "tune_vae",
     "vae_lstm",
 ]
