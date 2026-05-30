@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { getMetrics, type Metrics as MetricsData } from "../api";
+import { useT } from "../i18n";
 
 export default function Metrics() {
+  const t = useT();
   const [data, setData] = useState<MetricsData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,24 +15,24 @@ export default function Metrics() {
   }, []);
 
   if (error) {
-    return <div className="status-alert">backend offline. start it with: make serve</div>;
+    return <div className="status-alert">{t.monitor.offline}</div>;
   }
   if (!data || data.results.length === 0) {
-    return <div className="label">no metrics yet. generate them with: make compare</div>;
+    return <div className="label">{t.metrics.none}</div>;
   }
 
   const maxPr = Math.max(...data.results.map((row) => row.real_pr_auc));
 
   return (
     <div style={{ maxWidth: 760 }}>
-      <div className="label">Model comparison on held-out data</div>
+      <div className="label">{t.metrics.title}</div>
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
         <thead>
           <tr className="label">
-            <th style={{ textAlign: "left", padding: "6px 8px" }}>Model</th>
-            <th style={{ textAlign: "right", padding: "6px 8px" }}>real ROC</th>
-            <th style={{ textAlign: "right", padding: "6px 8px" }}>real PR-AUC</th>
-            <th style={{ textAlign: "right", padding: "6px 8px" }}>syn ROC</th>
+            <th style={{ textAlign: "left", padding: "6px 8px" }}>{t.metrics.model}</th>
+            <th style={{ textAlign: "right", padding: "6px 8px" }}>{t.metrics.realRoc}</th>
+            <th style={{ textAlign: "right", padding: "6px 8px" }}>{t.metrics.realPr}</th>
+            <th style={{ textAlign: "right", padding: "6px 8px" }}>{t.metrics.synRoc}</th>
             <th style={{ width: 180 }} />
           </tr>
         </thead>
@@ -68,7 +70,7 @@ export default function Metrics() {
         </tbody>
       </table>
       <div className="label" style={{ marginTop: 14 }}>
-        selected final model: <span className="status-normal">{data.selected_model}</span>
+        {t.metrics.selected}: <span className="status-normal">{data.selected_model}</span>
       </div>
     </div>
   );

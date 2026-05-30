@@ -2,6 +2,8 @@ import { motion, useScroll, useTransform, type MotionValue } from "framer-motion
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 
+import LangToggle from "../components/LangToggle";
+import { useT } from "../i18n";
 import "./presentation.css";
 
 type Progress = MotionValue<number>;
@@ -35,10 +37,7 @@ function ImageScene({
 }) {
   const opacity = useReveal(progress, range, first);
   return (
-    <motion.div
-      className="scene"
-      style={{ opacity, backgroundImage: `url(/presentation/${image})` }}
-    >
+    <motion.div className="scene" style={{ opacity, backgroundImage: `url(/presentation/${image})` }}>
       <div className="scene__veil" />
       <div className="scene__text">
         <div className="scene__kicker">{kicker}</div>
@@ -64,16 +63,9 @@ function WindowScene({
 }) {
   const opacity = useReveal(progress, range);
   const shadeFrom: Range = [range[0] + 0.02, range[0] + 0.07];
-  const shadeY = useTransform(
-    progress,
-    shadeFrom,
-    closing ? ["-100%", "0%"] : ["0%", "-100%"],
-  );
+  const shadeY = useTransform(progress, shadeFrom, closing ? ["-100%", "0%"] : ["0%", "-100%"]);
   return (
-    <motion.div
-      className="scene"
-      style={{ opacity, backgroundImage: "url(/presentation/window.jpg)" }}
-    >
+    <motion.div className="scene" style={{ opacity, backgroundImage: "url(/presentation/window.jpg)" }}>
       <div className="scene__veil" />
       <motion.div className="scene__shade" style={{ y: shadeY }} />
       <div className="scene__text">
@@ -84,22 +76,10 @@ function WindowScene({
   );
 }
 
-const PANELS: { range: Range; title: string; body: string }[] = [
-  {
-    range: [0.51, 0.57],
-    title: "It learns what normal looks like",
-    body: "A neural network sees thousands of ordinary approaches and departures and learns their shape.",
-  },
-  {
-    range: [0.57, 0.63],
-    title: "It flags what deviates",
-    body: "Anything it cannot reconstruct, an odd route, an altitude bust, a frozen transponder, raises the score.",
-  },
-  {
-    range: [0.63, 0.68],
-    title: "You can provoke it live",
-    body: "Inject a deviation or cut the transponder and watch the alert fire, with its detection latency.",
-  },
+const PANEL_RANGES: Range[] = [
+  [0.51, 0.57],
+  [0.57, 0.63],
+  [0.63, 0.68],
 ];
 
 function ExplainPanel({
@@ -123,25 +103,50 @@ function ExplainPanel({
   );
 }
 
-function Explain({ progress, range }: { progress: Progress; range: Range }) {
+function Explain({
+  progress,
+  range,
+  header,
+  panels,
+}: {
+  progress: Progress;
+  range: Range;
+  header: string;
+  panels: { title: string; body: string }[];
+}) {
   const opacity = useReveal(progress, range);
   return (
-    <motion.div
-      className="scene"
-      style={{ opacity, backgroundImage: "url(/presentation/console.jpg)" }}
-    >
+    <motion.div className="scene" style={{ opacity, backgroundImage: "url(/presentation/console.jpg)" }}>
       <div className="scene__veil" />
-      <div className="explain__header">Air traffic control / LEMD</div>
+      <div className="explain__header">{header}</div>
       <div className="explain">
-        {PANELS.map((panel) => (
-          <ExplainPanel key={panel.title} progress={progress} {...panel} />
+        {panels.map((panel, index) => (
+          <ExplainPanel
+            key={index}
+            progress={progress}
+            range={PANEL_RANGES[index]}
+            title={panel.title}
+            body={panel.body}
+          />
         ))}
       </div>
     </motion.div>
   );
 }
 
-function Acknowledgements({ progress, range }: { progress: Progress; range: Range }) {
+function Acknowledgements({
+  progress,
+  range,
+  kicker,
+  subtitle,
+  enter,
+}: {
+  progress: Progress;
+  range: Range;
+  kicker: string;
+  subtitle: string;
+  enter: string;
+}) {
   const opacity = useReveal(progress, range);
   const textOpacity = useTransform(progress, [range[0] + 0.03, range[0] + 0.08], [0, 1]);
   return (
@@ -151,11 +156,11 @@ function Acknowledgements({ progress, range }: { progress: Progress; range: Rang
     >
       <div className="scene__veil" />
       <motion.div className="ack" style={{ opacity: textOpacity }}>
-        <div className="scene__kicker">Thank you</div>
+        <div className="scene__kicker">{kicker}</div>
         <div className="ack__title">SADAR</div>
-        <p className="scene__sub">Smart Anomaly Detection for Aviation Routes</p>
+        <p className="scene__sub">{subtitle}</p>
         <Link to="/" style={{ marginTop: 18 }}>
-          <button>Enter the console</button>
+          <button>{enter}</button>
         </Link>
       </motion.div>
     </motion.div>
@@ -163,6 +168,8 @@ function Acknowledgements({ progress, range }: { progress: Progress; range: Rang
 }
 
 export default function Presentation() {
+  const t = useT();
+  const s = t.scenes;
   const trackRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: trackRef,
@@ -175,9 +182,10 @@ export default function Presentation() {
         className="presentation__progress"
         style={{ scaleX: scrollYProgress, width: "100%" }}
       />
-      <div className="presentation__skip">
+      <div className="presentation__skip" style={{ display: "flex", gap: 8 }}>
+        <LangToggle />
         <Link to="/">
-          <button>Skip</button>
+          <button>{s.skip}</button>
         </Link>
       </div>
       <div className="presentation__track" ref={trackRef}>
@@ -187,48 +195,59 @@ export default function Presentation() {
             range={[0, 0.12]}
             first
             image="terminal.jpg"
-            kicker="Madrid Barajas / LEMD"
-            title="You walk through the terminal"
-            sub="Every day, around a thousand flights follow the same quiet pattern."
+            kicker={s.terminal.kicker}
+            title={s.terminal.title}
+            sub={s.terminal.sub}
           />
           <ImageScene
             progress={scrollYProgress}
             range={[0.11, 0.24]}
             image="jetbridge.jpg"
-            kicker="Boarding"
-            title="Down the jet bridge"
+            kicker={s.jetbridge.kicker}
+            title={s.jetbridge.title}
           />
           <ImageScene
             progress={scrollYProgress}
             range={[0.23, 0.36]}
             image="cabin.jpg"
-            kicker="On board"
-            title="Take your seat"
-            sub="Lower the window shade."
+            kicker={s.cabin.kicker}
+            title={s.cabin.title}
+            sub={s.cabin.sub}
           />
           <WindowScene
             progress={scrollYProgress}
             range={[0.35, 0.49]}
             closing
-            kicker="Doors closed"
-            title="The flight begins"
+            kicker={s.closing.kicker}
+            title={s.closing.title}
           />
-          <Explain progress={scrollYProgress} range={[0.48, 0.69]} />
+          <Explain
+            progress={scrollYProgress}
+            range={[0.48, 0.69]}
+            header={s.explainHeader}
+            panels={s.panels}
+          />
           <WindowScene
             progress={scrollYProgress}
             range={[0.68, 0.8]}
             closing={false}
-            kicker="Destination"
-            title="Arrived safely"
+            kicker={s.opening.kicker}
+            title={s.opening.title}
           />
           <ImageScene
             progress={scrollYProgress}
             range={[0.79, 0.9]}
             image="leaving.jpg"
-            kicker="Conformance confirmed"
-            title="You walk out"
+            kicker={s.leaving.kicker}
+            title={s.leaving.title}
           />
-          <Acknowledgements progress={scrollYProgress} range={[0.89, 1.0]} />
+          <Acknowledgements
+            progress={scrollYProgress}
+            range={[0.89, 1.0]}
+            kicker={s.ack.kicker}
+            subtitle={s.ack.subtitle}
+            enter={s.enter}
+          />
         </div>
       </div>
     </div>

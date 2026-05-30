@@ -11,10 +11,10 @@ import {
 import AlertBanner from "../components/AlertBanner";
 import RadarPlot from "../components/RadarPlot";
 import ScoreTimeline from "../components/ScoreTimeline";
+import { useT } from "../i18n";
 
 interface KindConfig {
   id: string;
-  label: string;
   min: number;
   max: number;
   step: number;
@@ -23,14 +23,15 @@ interface KindConfig {
 }
 
 const KINDS: KindConfig[] = [
-  { id: "route_deviation", label: "Route deviation", min: 0, max: 80000, step: 2000, def: 40000, unit: "m" },
-  { id: "altitude", label: "Altitude bust", min: 0, max: 2500, step: 100, def: 1200, unit: "m" },
-  { id: "speed", label: "Speed anomaly", min: 0.3, max: 2.6, step: 0.1, def: 2.2, unit: "x" },
-  { id: "holding", label: "Holding turns", min: 60, max: 300, step: 20, def: 160, unit: "s/turn" },
-  { id: "freeze", label: "Transponder cut", min: 0, max: 0, step: 1, def: 0, unit: "" },
+  { id: "route_deviation", min: 0, max: 80000, step: 2000, def: 40000, unit: "m" },
+  { id: "altitude", min: 0, max: 2500, step: 100, def: 1200, unit: "m" },
+  { id: "speed", min: 0.3, max: 2.6, step: 0.1, def: 2.2, unit: "x" },
+  { id: "holding", min: 60, max: 300, step: 20, def: 160, unit: "s/turn" },
+  { id: "freeze", min: 0, max: 0, step: 1, def: 0, unit: "" },
 ];
 
 export default function Simulator() {
+  const t = useT();
   const [bases, setBases] = useState<FlightSummary[]>([]);
   const [baseId, setBaseId] = useState<number | null>(null);
   const [baseDetail, setBaseDetail] = useState<FlightDetail | null>(null);
@@ -64,7 +65,7 @@ export default function Simulator() {
   }, [baseId, kind, magnitude, onset]);
 
   if (error) {
-    return <div className="status-alert">backend offline. start it with: make serve</div>;
+    return <div className="status-alert">{t.monitor.offline}</div>;
   }
 
   const config = KINDS.find((entry) => entry.id === kind)!;
@@ -78,7 +79,7 @@ export default function Simulator() {
     <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20 }}>
       <div className="panel" style={{ padding: 18, display: "grid", gap: 18, alignContent: "start" }}>
         <div>
-          <div className="label">Base flight (normal)</div>
+          <div className="label">{t.simulator.baseFlight}</div>
           <select
             value={baseId ?? ""}
             onChange={(event) => setBaseId(Number(event.target.value))}
@@ -93,7 +94,7 @@ export default function Simulator() {
         </div>
 
         <div>
-          <div className="label">Injected anomaly</div>
+          <div className="label">{t.simulator.injectedAnomaly}</div>
           <div style={{ display: "grid", gap: 4, marginTop: 6 }}>
             {KINDS.map((entry) => (
               <button
@@ -101,7 +102,7 @@ export default function Simulator() {
                 onClick={() => changeKind(entry.id)}
                 style={{ textAlign: "left", borderColor: kind === entry.id ? "var(--alert)" : "var(--panel-edge)", color: kind === entry.id ? "var(--alert)" : "var(--text)" }}
               >
-                {entry.label}
+                {t.simulator.kinds[entry.id]}
               </button>
             ))}
           </div>
@@ -110,7 +111,7 @@ export default function Simulator() {
         {config.max > config.min && (
           <div>
             <div className="label">
-              Intensity: {magnitude}
+              {t.simulator.intensity}: {magnitude}
               {config.unit}
             </div>
             <input
@@ -126,7 +127,10 @@ export default function Simulator() {
         )}
 
         <div>
-          <div className="label">Onset: {(onset * 100).toFixed(0)}% into the window</div>
+          <div className="label">
+            {t.simulator.onset}: {(onset * 100).toFixed(0)}
+            {t.simulator.onsetSuffix}
+          </div>
           <input
             type="range"
             min={0.1}
@@ -151,8 +155,8 @@ export default function Simulator() {
           {result && baseDetail && (
             <RadarPlot
               tracks={[
-                { points: baseDetail.path, color: "var(--muted)", label: "original", dashed: true },
-                { points: result.path, color: "var(--alert)", label: "injected" },
+                { points: baseDetail.path, color: "var(--muted)", label: t.simulator.original, dashed: true },
+                { points: result.path, color: "var(--alert)", label: t.simulator.injected },
               ]}
             />
           )}

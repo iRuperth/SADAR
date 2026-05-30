@@ -1,3 +1,5 @@
+import { useT } from "../i18n";
+
 interface Props {
   scores: number[];
   stepThreshold: number;
@@ -5,6 +7,7 @@ interface Props {
 }
 
 export default function AlertBanner({ scores, stepThreshold, latency }: Props) {
+  const t = useT();
   const peak = scores.length ? Math.max(...scores) : 0;
   const alert = peak >= stepThreshold;
   return (
@@ -22,11 +25,11 @@ export default function AlertBanner({ scores, stepThreshold, latency }: Props) {
         className={alert ? "status-alert" : "status-normal"}
         style={{ fontSize: 18, letterSpacing: "0.24em" }}
       >
-        {alert ? "ALERT" : "NOMINAL"}
+        {alert ? t.alert.alert : t.alert.nominal}
       </span>
       <span className="label">
-        peak {peak.toFixed(3)} / thr {stepThreshold.toFixed(3)}
-        {alert && latency != null ? ` / latency ${latency.toFixed(0)}s` : ""}
+        {t.alert.peak} {peak.toFixed(3)} / {t.alert.threshold} {stepThreshold.toFixed(3)}
+        {alert && latency != null ? ` / ${t.alert.latency} ${latency.toFixed(0)}s` : ""}
       </span>
     </div>
   );

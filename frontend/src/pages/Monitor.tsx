@@ -4,8 +4,10 @@ import { getFlight, getFlights, type FlightDetail, type FlightSummary } from "..
 import AlertBanner from "../components/AlertBanner";
 import RadarPlot from "../components/RadarPlot";
 import ScoreTimeline from "../components/ScoreTimeline";
+import { useT } from "../i18n";
 
 export default function Monitor() {
+  const t = useT();
   const [flights, setFlights] = useState<FlightSummary[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [detail, setDetail] = useState<FlightDetail | null>(null);
@@ -28,13 +30,13 @@ export default function Monitor() {
   }, [selected]);
 
   if (error) {
-    return <div className="status-alert">backend offline. start it with: make serve</div>;
+    return <div className="status-alert">{t.monitor.offline}</div>;
   }
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 20 }}>
       <div>
-        <div className="label">Most anomalous windows</div>
+        <div className="label">{t.monitor.mostAnomalous}</div>
         <div style={{ marginTop: 10, display: "grid", gap: 1, background: "var(--panel-edge)" }}>
           {flights.map((flight) => (
             <button
@@ -64,8 +66,8 @@ export default function Monitor() {
           {detail && (
             <RadarPlot
               tracks={[
-                { points: detail.path, color: "var(--info)", label: "actual" },
-                { points: detail.reconstructed, color: "var(--muted)", label: "reconstructed", dashed: true },
+                { points: detail.path, color: "var(--info)", label: t.monitor.actual },
+                { points: detail.reconstructed, color: "var(--muted)", label: t.monitor.reconstructed, dashed: true },
               ]}
             />
           )}

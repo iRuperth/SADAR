@@ -1,3 +1,5 @@
+import { useT } from "../i18n";
+
 interface Props {
   scores: number[];
   threshold: number;
@@ -15,6 +17,7 @@ export default function ScoreTimeline({
   width = 600,
   height = 180,
 }: Props) {
+  const t = useT();
   const pad = 28;
   const count = scores.length;
   const maxScore = Math.max(threshold, ...scores) * 1.15 || 1;
@@ -37,7 +40,7 @@ export default function ScoreTimeline({
         strokeDasharray="4 3"
       />
       <text x={width - pad} y={thresholdY - 5} textAnchor="end" fontSize={10} fill="var(--alert)">
-        THRESHOLD
+        {t.timeline.threshold}
       </text>
       {onsetIndex != null && (
         <line
