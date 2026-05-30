@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 
 import numpy as np
@@ -21,6 +22,7 @@ class ConformanceService:
     def __init__(self, serve_config_path: str) -> None:
         serve = load_config(serve_config_path)
         config = load_config(serve["eval_config"])
+        self.metrics_path = serve.get("metrics", "")
 
         self.device = resolve_device(config["model"]["device"])
         processed_dir = config["data"]["processed_dir"]
@@ -81,16 +83,29 @@ class ConformanceService:
             return None
         return float(over[0] * self.step_seconds)
 
-    def list_flights(self, limit: int) -> list[dict]:
-        order = np.argsort(self.window_scores)[::-1][:limit]
+    def list_flights(self, limit: int, order: str = "anomalous") -> list[dict]:
+        if order == "typical":
+            median = np.median(self.window_scores)
+            ranked = np.argsort(np.abs(self.window_scores - median))
+        else:
+            ranked = np.argsort(self.window_scores)
+            if order == "anomalous":
+                ranked = ranked[::-1]
+        chosen = ranked[:limit]
         return [
             {
                 "id": int(i),
                 "score": float(self.window_scores[i]),
                 "anomalous": bool(self.window_scores[i] >= self.threshold),
             }
-            for i in order
+            for i in chosen
         ]
+
+    def metrics(self) -> dict:
+        if self.metrics_path and os.path.exists(self.metrics_path):
+            with open(self.metrics_path) as handle:
+                return json.load(handle)
+        return {"selected_model": None, "results": []}
 
     def flight_detail(self, flight_id: int) -> dict:
         scaled = self.test[flight_id]

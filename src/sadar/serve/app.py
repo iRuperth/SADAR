@@ -37,8 +37,13 @@ def health() -> dict:
 
 
 @app.get("/api/flights")
-def flights(limit: int = 30) -> list[dict]:
-    return service.list_flights(limit)
+def flights(limit: int = 30, order: str = "anomalous") -> list[dict]:
+    return service.list_flights(limit, order)
+
+
+@app.get("/api/metrics")
+def metrics() -> dict:
+    return service.metrics()
 
 
 @app.get("/api/flights/{flight_id}")
