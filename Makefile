@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare serve web dev mlflow-ui lint clean
+.PHONY: help install notebook preprocess baseline train-lstm train-transformer train-vae tune-vae evaluate compare serve web dev mlflow-ui lint clean docker-build docker-up docker-down docker-logs
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -52,3 +52,15 @@ lint: ## Python linter
 
 clean: ## Clean caches and artifacts
 	rm -rf .ruff_cache **/__pycache__
+
+docker-build: ## Build the backend and frontend container images
+	docker compose build
+
+docker-up: ## Start the stack in the background (backend on :8000, frontend on :5180)
+	docker compose up -d
+
+docker-down: ## Stop the stack and remove the containers
+	docker compose down
+
+docker-logs: ## Tail the logs of the running stack
+	docker compose logs -f
