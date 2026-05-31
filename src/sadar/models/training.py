@@ -190,6 +190,8 @@ def fit(
 
         if tracker is not None:
             tracker.log_metric("best_val_loss", best_val)
+            if checkpoint_path is not None:
+                tracker.log_artifact(checkpoint_path)
         return best_val
     finally:
         if tracker is not None:
