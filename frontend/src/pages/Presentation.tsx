@@ -157,7 +157,7 @@ export default function Presentation() {
     const unsub = scrollYProgress.on("change", (value) => {
       if (value > 0.96 && !handedOffRef.current) {
         handedOffRef.current = true;
-        navigate("/");
+        navigate("/dashboard");
       }
     });
     return () => unsub();
@@ -171,7 +171,7 @@ export default function Presentation() {
       />
       <div className="presentation__skip" style={{ display: "flex", gap: 8 }}>
         <LangToggle />
-        <Link to="/">
+        <Link to="/dashboard">
           <button>{s.skip}</button>
         </Link>
       </div>
@@ -246,7 +246,7 @@ export function PresentationFinal() {
       />
       <div className="presentation__skip" style={{ display: "flex", gap: 8 }}>
         <LangToggle />
-        <Link to="/">
+        <Link to="/dashboard">
           <button>{s.skip}</button>
         </Link>
       </div>

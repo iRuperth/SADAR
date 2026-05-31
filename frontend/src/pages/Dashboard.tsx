@@ -99,7 +99,7 @@ export default function Dashboard() {
                 {t.nav[id]}
               </button>
             ))}
-            <Link to="/presentation">
+            <Link to="/">
               <button>{t.nav.presentation}</button>
             </Link>
             <Link to="/presentation/final">
