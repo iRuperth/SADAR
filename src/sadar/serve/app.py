@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from sadar.serve.inference import ConformanceService
@@ -66,3 +69,19 @@ def simulate(request: SimulationRequest) -> dict:
         return service.simulate(request.id, request.kind, request.magnitude, request.onset)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+_frontend_dir = Path(os.environ.get("SADAR_FRONTEND_DIR", "frontend/dist"))
+if _frontend_dir.is_dir():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=_frontend_dir / "assets"),
+        name="frontend-assets",
+    )
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa(full_path: str) -> FileResponse:
+        candidate = _frontend_dir / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_frontend_dir / "index.html")
