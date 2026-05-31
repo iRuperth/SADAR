@@ -1,15 +1,3 @@
----
-title: SADAR Flight Conformance Monitor
-emoji: 🛬
-colorFrom: gray
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
-short_description: Anomaly detection on ADS-B trajectories around Madrid-Barajas.
----
-
 <div align="center">
 
 <img src="docs/assets/logo.png" alt="SADAR" width="220" />
