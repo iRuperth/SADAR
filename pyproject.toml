@@ -1,7 +1,7 @@
 [project]
 name = "sadar"
 version = "0.1.0"
-description = "Smart Anomaly Detection for Aviation Routes — anomalous flight behavior detection with Deep Learning over ADS-B data (LEMD)."
+description = "Smart Anomaly Detection for Aviation Routes - anomalous flight behavior detection with Deep Learning over ADS-B data (LEMD)."
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
