@@ -31,6 +31,10 @@
   <img src="https://img.shields.io/badge/Docker-compose-0a1014?logo=docker&logoColor=7fd1c6&labelColor=0d1a1f" />
 </p>
 
+<p>
+  <a href="https://medium.com/@devrup404/cuando-el-modelo-m%C3%A1s-complejo-no-es-el-que-detecta-mejor-db64f1195ae9"><img src="https://img.shields.io/badge/Medium-Leer%20el%20art%C3%ADculo-0a1014?logo=medium&logoColor=7fd1c6&labelColor=0d1a1f" alt="Leer en Medium" /></a>
+</p>
+
 </div>
 
 ---

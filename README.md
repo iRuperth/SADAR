@@ -31,6 +31,10 @@
   <img src="https://img.shields.io/badge/Docker-compose-0a1014?logo=docker&logoColor=7fd1c6&labelColor=0d1a1f" />
 </p>
 
+<p>
+  <a href="https://medium.com/@devrup404/when-the-most-complex-model-is-not-the-one-that-detects-best-aebafe115ea2"><img src="https://img.shields.io/badge/Medium-Read%20the%20article-0a1014?logo=medium&logoColor=7fd1c6&labelColor=0d1a1f" alt="Read on Medium" /></a>
+</p>
+
 </div>
 
 ---
