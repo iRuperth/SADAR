@@ -211,7 +211,7 @@ const ES: Dict = {
       roles: {
         tower1: "Control de aproximación",
         pilot: "Piloto",
-        tower2: "Control de torre",
+        tower2: "Torre de control",
       },
     },
   },

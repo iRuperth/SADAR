@@ -10,9 +10,9 @@ type Progress = MotionValue<number>;
 type Range = [number, number];
 
 const TEAM = [
-  { roleKey: "tower1", name: "Nombre Apellido" },
-  { roleKey: "pilot", name: "Nombre Apellido" },
-  { roleKey: "tower2", name: "Nombre Apellido" },
+  { roleKey: "tower1", name: "Txema Puch" },
+  { roleKey: "pilot", name: "Mónica Gómez" },
+  { roleKey: "tower2", name: "Roberto Molero" },
 ] as const;
 
 const MOBILE_BREAKPOINT_QUERY = "(max-width: 900px)";
