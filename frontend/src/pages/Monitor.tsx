@@ -7,11 +7,28 @@ import { useT } from "../i18n";
 
 const SPEEDS = [1, 10, 30, 60];
 const AIRLINES = ["IBE", "AEA", "RYR", "VLG", "AFR", "BAW", "DLH", "KLM", "EZY", "UAE", "QTR", "AAL"];
+const MOBILE_BREAKPOINT = 900;
+const MOBILE_ALERT_LIMIT = 3;
 
 function newCallsign(seed: number): string {
   const airline = AIRLINES[seed % AIRLINES.length];
   const number = 100 + (seed * 37) % 8900;
   return `${airline}${number}`;
+}
+
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+    const handler = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
 }
 
 interface MonitorProps {
@@ -21,6 +38,7 @@ interface MonitorProps {
 
 export default function Monitor({ injected, onClearInjected }: MonitorProps) {
   const t = useT();
+  const isMobile = useIsMobile();
   const [scene, setScene] = useState<Scene | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [simTime, setSimTime] = useState(120);
@@ -174,7 +192,8 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
           <div
             style={{
               position: "absolute",
-              top: 14,
+              top: isMobile ? "auto" : 14,
+              bottom: isMobile ? 60 : "auto",
               left: 14,
               right: 14,
               maxWidth: 280,
@@ -184,7 +203,7 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
               zIndex: 5,
             }}
           >
-            {alerts.map((alert) => (
+            {(isMobile ? alerts.slice(0, MOBILE_ALERT_LIMIT) : alerts).map((alert) => (
               <div
                 key={alert.id}
                 onClick={() => setSelectedId(alert.id)}
@@ -220,30 +239,41 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
             position: "absolute",
             bottom: 12,
             left: 12,
+            right: isMobile ? 12 : "auto",
             display: "flex",
             gap: 6,
             alignItems: "center",
-            flexWrap: "wrap",
-            maxWidth: "calc(100% - 24px)",
+            flexWrap: isMobile ? "nowrap" : "wrap",
+            overflowX: isMobile ? "auto" : "visible",
+            maxWidth: isMobile ? "calc(100% - 24px)" : "calc(100% - 24px)",
             background: "rgba(14, 26, 31, 0.85)",
             border: "1px solid var(--panel-edge)",
-            padding: "6px 10px",
-            fontSize: 11,
+            padding: isMobile ? "6px 8px" : "6px 10px",
+            fontSize: isMobile ? 12 : 11,
             letterSpacing: "0.08em",
             textTransform: "uppercase",
           }}
         >
-          <span style={{ color: "var(--info)" }}>{clock}</span>
-          <span style={{ color: "var(--panel-edge)" }}>|</span>
-          <button onClick={() => setRunning((value) => !value)} style={{ padding: "2px 8px" }}>
-            {running ? "PAUSE" : "PLAY"}
+          <span style={{ color: "var(--info)", flexShrink: 0 }}>{clock}</span>
+          <span style={{ color: "var(--panel-edge)", flexShrink: 0 }}>|</span>
+          <button
+            onClick={() => setRunning((value) => !value)}
+            style={{
+              padding: isMobile ? "8px 12px" : "2px 8px",
+              fontSize: isMobile ? 12 : undefined,
+              flexShrink: 0,
+            }}
+          >
+            {isMobile ? (running ? "P" : "▶") : running ? "PAUSE" : "PLAY"}
           </button>
           {SPEEDS.map((value) => (
             <button
               key={value}
               onClick={() => setSpeed(value)}
               style={{
-                padding: "2px 8px",
+                padding: isMobile ? "8px 12px" : "2px 8px",
+                fontSize: isMobile ? 12 : undefined,
+                flexShrink: 0,
                 borderColor: speed === value ? "var(--info)" : "var(--panel-edge)",
                 color: speed === value ? "var(--info)" : "var(--text)",
               }}
@@ -251,7 +281,14 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
               {value}X
             </button>
           ))}
-          <button onClick={() => setSimTime(120)} style={{ padding: "2px 8px" }}>
+          <button
+            onClick={() => setSimTime(120)}
+            style={{
+              padding: isMobile ? "8px 12px" : "2px 8px",
+              fontSize: isMobile ? 12 : undefined,
+              flexShrink: 0,
+            }}
+          >
             RESET
           </button>
         </div>
@@ -402,6 +439,63 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
           const thrY = sparkH - (stepThreshold / maxS) * sparkH;
           const alerting = onScope && currentScore >= stepThreshold;
           const alertClass = alerting && cursorIdx >= 0 ? classify(selected.path, cursorIdx) : null;
+          const fullTable = (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
+              <span style={{ color: "var(--muted)" }}>CALLSIGN</span>
+              <span style={{ textAlign: "right" }}>{selected.callsign}</span>
+              <span style={{ color: "var(--muted)" }}>WINDOW</span>
+              <span style={{ textAlign: "right" }}>{String(selected.id).padStart(5, "0")}</span>
+              <span style={{ color: "var(--muted)" }}>ALTITUDE</span>
+              <span style={{ textAlign: "right" }}>{onScope ? `${fl} (${altFt} FT)` : "---"}</span>
+              <span style={{ color: "var(--muted)" }}>GROUND SPD</span>
+              <span style={{ textAlign: "right" }}>{onScope ? `${Math.round(speedKt)} KT` : "---"}</span>
+              <span style={{ color: "var(--muted)" }}>HEADING</span>
+              <span style={{ textAlign: "right" }}>{onScope ? `${String(Math.round(headingDeg)).padStart(3, "0")}°` : "---"}</span>
+              <span style={{ color: "var(--muted)" }}>DIST LEMD</span>
+              <span style={{ textAlign: "right" }}>{onScope ? `${distNm.toFixed(1)} NM` : "---"}</span>
+              <span style={{ color: "var(--muted)" }}>SCORE (NOW)</span>
+              <span style={{ textAlign: "right", color: alerting ? "var(--alert)" : "var(--text)" }}>
+                {onScope ? currentScore.toFixed(3) : "---"}
+              </span>
+              <span style={{ color: "var(--muted)" }}>PEAK</span>
+              <span style={{ textAlign: "right" }}>{peakScore.toFixed(3)}</span>
+              <span style={{ color: "var(--muted)" }}>THRESHOLD</span>
+              <span style={{ textAlign: "right" }}>{stepThreshold.toFixed(3)}</span>
+              {alertClass && (
+                <>
+                  <span style={{ color: "var(--muted)" }}>ALERT TYPE</span>
+                  <span
+                    style={{
+                      textAlign: "right",
+                      color: alertClass.critical ? "var(--emergency)" : "var(--alert)",
+                    }}
+                  >
+                    {alertClass.short}
+                  </span>
+                  <span style={{ color: "var(--muted)" }}>SIGNATURE</span>
+                  <span style={{ textAlign: "right", fontSize: 10 }}>{alertClass.label}</span>
+                  <span style={{ color: "var(--muted)" }}>REASON</span>
+                  <span style={{ textAlign: "right", fontSize: 10, color: "var(--label)" }}>
+                    {alertClass.reason} (heuristic)
+                  </span>
+                </>
+              )}
+            </div>
+          );
+          const summaryTable = (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
+              <span style={{ color: "var(--muted)" }}>CALLSIGN</span>
+              <span style={{ textAlign: "right" }}>{selected.callsign}</span>
+              <span style={{ color: "var(--muted)" }}>ALTITUDE</span>
+              <span style={{ textAlign: "right" }}>{onScope ? `${fl} (${altFt} FT)` : "---"}</span>
+              <span style={{ color: "var(--muted)" }}>SPEED</span>
+              <span style={{ textAlign: "right" }}>{onScope ? `${Math.round(speedKt)} KT` : "---"}</span>
+              <span style={{ color: "var(--muted)" }}>SCORE</span>
+              <span style={{ textAlign: "right", color: alerting ? "var(--alert)" : "var(--text)" }}>
+                {onScope ? currentScore.toFixed(3) : "---"}
+              </span>
+            </div>
+          );
           return (
             <div style={{ padding: "10px 12px", borderTop: "1px solid var(--panel-edge)", fontSize: 11 }}>
               <div className="label" style={{ marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
@@ -410,59 +504,36 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
                   {onScope ? (alerting ? "ALERT" : "TRACK") : localT < 0 ? "INBOUND" : "CLEARED"}
                 </span>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
-                <span style={{ color: "var(--muted)" }}>CALLSIGN</span>
-                <span style={{ textAlign: "right" }}>{selected.callsign}</span>
-                <span style={{ color: "var(--muted)" }}>WINDOW</span>
-                <span style={{ textAlign: "right" }}>{String(selected.id).padStart(5, "0")}</span>
-                <span style={{ color: "var(--muted)" }}>ALTITUDE</span>
-                <span style={{ textAlign: "right" }}>{onScope ? `${fl} (${altFt} FT)` : "---"}</span>
-                <span style={{ color: "var(--muted)" }}>GROUND SPD</span>
-                <span style={{ textAlign: "right" }}>{onScope ? `${Math.round(speedKt)} KT` : "---"}</span>
-                <span style={{ color: "var(--muted)" }}>HEADING</span>
-                <span style={{ textAlign: "right" }}>{onScope ? `${String(Math.round(headingDeg)).padStart(3, "0")}°` : "---"}</span>
-                <span style={{ color: "var(--muted)" }}>DIST LEMD</span>
-                <span style={{ textAlign: "right" }}>{onScope ? `${distNm.toFixed(1)} NM` : "---"}</span>
-                <span style={{ color: "var(--muted)" }}>SCORE (NOW)</span>
-                <span style={{ textAlign: "right", color: alerting ? "var(--alert)" : "var(--text)" }}>
-                  {onScope ? currentScore.toFixed(3) : "---"}
-                </span>
-                <span style={{ color: "var(--muted)" }}>PEAK</span>
-                <span style={{ textAlign: "right" }}>{peakScore.toFixed(3)}</span>
-                <span style={{ color: "var(--muted)" }}>THRESHOLD</span>
-                <span style={{ textAlign: "right" }}>{stepThreshold.toFixed(3)}</span>
-                {alertClass && (
-                  <>
-                    <span style={{ color: "var(--muted)" }}>ALERT TYPE</span>
-                    <span
-                      style={{
-                        textAlign: "right",
-                        color: alertClass.critical ? "var(--emergency)" : "var(--alert)",
-                      }}
+              {isMobile ? (
+                <>
+                  {summaryTable}
+                  <details style={{ marginTop: 8 }}>
+                    <summary
+                      className="label"
+                      style={{ cursor: "pointer", color: "var(--info)", padding: "4px 0" }}
                     >
-                      {alertClass.short}
-                    </span>
-                    <span style={{ color: "var(--muted)" }}>SIGNATURE</span>
-                    <span style={{ textAlign: "right", fontSize: 10 }}>{alertClass.label}</span>
-                    <span style={{ color: "var(--muted)" }}>REASON</span>
-                    <span style={{ textAlign: "right", fontSize: 10, color: "var(--label)" }}>
-                      {alertClass.reason} (heuristic)
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className="label" style={{ marginTop: 10, marginBottom: 4 }}>SCORE / 10 MIN</div>
-              <svg
-                viewBox={`0 0 ${sparkW} ${sparkH}`}
-                preserveAspectRatio="none"
-                style={{ display: "block", width: "100%", height: sparkH, background: "var(--bg-deep)", border: "1px solid var(--panel-edge)" }}
-              >
-                <line x1={0} y1={thrY} x2={sparkW} y2={thrY} stroke="var(--alert)" strokeDasharray="3 3" strokeWidth={1} />
-                <path d={sparkPath} fill="none" stroke="var(--info)" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
-                {cursorIdx >= 0 && (
-                  <line x1={cursorX} y1={0} x2={cursorX} y2={sparkH} stroke="var(--track-selected)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-                )}
-              </svg>
+                      DETAILS
+                    </summary>
+                    <div style={{ marginTop: 6 }}>{fullTable}</div>
+                  </details>
+                </>
+              ) : (
+                <>
+                  {fullTable}
+                  <div className="label" style={{ marginTop: 10, marginBottom: 4 }}>SCORE / 10 MIN</div>
+                  <svg
+                    viewBox={`0 0 ${sparkW} ${sparkH}`}
+                    preserveAspectRatio="none"
+                    style={{ display: "block", width: "100%", height: sparkH, background: "var(--bg-deep)", border: "1px solid var(--panel-edge)" }}
+                  >
+                    <line x1={0} y1={thrY} x2={sparkW} y2={thrY} stroke="var(--alert)" strokeDasharray="3 3" strokeWidth={1} />
+                    <path d={sparkPath} fill="none" stroke="var(--info)" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
+                    {cursorIdx >= 0 && (
+                      <line x1={cursorX} y1={0} x2={cursorX} y2={sparkH} stroke="var(--track-selected)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+                    )}
+                  </svg>
+                </>
+              )}
             </div>
           );
         })()}

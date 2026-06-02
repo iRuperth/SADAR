@@ -15,6 +15,21 @@ const TEAM = [
   { roleKey: "tower2", name: "Nombre Apellido" },
 ] as const;
 
+const MOBILE_BREAKPOINT_QUERY = "(max-width: 900px)";
+
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mql = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
+
 function useReveal(progress: Progress, range: Range, first = false): MotionValue<number> {
   const [start, end] = range;
   const pad = Math.min(0.04, (end - start) / 3);
@@ -302,6 +317,11 @@ function Credits({
   const pad = Math.min(0.04, (end - start) / 3);
   const opacity = useTransform(progress, [start, start + pad], [0, 1]);
   const textOpacity = useTransform(progress, [start + 0.03, start + 0.1], [0, 1]);
+  const isMobile = useIsMobile();
+  const roleFontSize = isMobile ? 11 : 12;
+  const nameFontSize = isMobile ? 18 : 22;
+  const teamBlockGap = isMobile ? 16 : 22;
+  const logoWidth = isMobile ? "min(440px, 85vw)" : "min(440px, 70vw)";
   return (
     <motion.div
       className="scene"
@@ -324,7 +344,7 @@ function Credits({
           src="/sadar-logo.png"
           alt="SADAR"
           className="radar-pulse"
-          style={{ width: "min(440px, 70vw)", height: "auto", display: "block" }}
+          style={{ width: logoWidth, height: "auto", display: "block" }}
         />
         <p className="scene__sub" style={{ marginTop: 0 }}>{subtitle}</p>
 
@@ -346,7 +366,7 @@ function Credits({
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 22,
+            gap: teamBlockGap,
             marginTop: 10,
             opacity: visible ? 1 : 0,
             transition: "opacity 600ms ease",
@@ -357,7 +377,7 @@ function Credits({
               <div
                 style={{
                   fontFamily: "var(--mono)",
-                  fontSize: 12,
+                  fontSize: roleFontSize,
                   letterSpacing: "0.22em",
                   textTransform: "uppercase",
                   color: "#7fd1c6",
@@ -370,7 +390,7 @@ function Credits({
                 className="radar-name-pulse"
                 style={{
                   fontFamily: "var(--mono)",
-                  fontSize: 22,
+                  fontSize: nameFontSize,
                   letterSpacing: "0.1em",
                   color: "#ffffff",
                   animationDelay: `${idx * 0.4}s`,

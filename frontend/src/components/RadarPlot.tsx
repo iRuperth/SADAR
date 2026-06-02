@@ -10,9 +10,15 @@ export interface RadarTrack {
   dashed?: boolean;
 }
 
+const NARROW_WIDTH_THRESHOLD = 380;
+const NARROW_HORIZONTAL_PADDING = 16;
+const LEGEND_RESERVED_HEIGHT = 26;
+const MIN_RADAR_DIM = 220;
+const DEFAULT_RADAR_DIM = 380;
+
 export default function RadarPlot({ tracks, size }: { tracks: RadarTrack[]; size?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [autoSize, setAutoSize] = useState(380);
+  const [autoSize, setAutoSize] = useState(DEFAULT_RADAR_DIM);
 
   useEffect(() => {
     if (size != null || !ref.current) return;
@@ -21,7 +27,8 @@ export default function RadarPlot({ tracks, size }: { tracks: RadarTrack[]; size
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         if (width <= 0 || height <= 0) continue;
-        const next = Math.max(220, Math.min(width, height - 26));
+        const widthCap = width < NARROW_WIDTH_THRESHOLD ? width - NARROW_HORIZONTAL_PADDING : width;
+        const next = Math.max(MIN_RADAR_DIM, Math.min(widthCap, height - LEGEND_RESERVED_HEIGHT));
         setAutoSize(next);
       }
     });

@@ -11,6 +11,10 @@ interface Props {
   height?: number;
 }
 
+const NARROW_TIMELINE_WIDTH = 420;
+const NARROW_TIMELINE_PADDING = 22;
+const DESKTOP_TIMELINE_PADDING = 28;
+
 export default function ScoreTimeline({
   scores,
   threshold,
@@ -40,7 +44,7 @@ export default function ScoreTimeline({
 
   const w = width ?? box.w;
   const h = height ?? box.h;
-  const pad = 28;
+  const pad = w < NARROW_TIMELINE_WIDTH ? NARROW_TIMELINE_PADDING : DESKTOP_TIMELINE_PADDING;
   const count = scores.length;
   const maxScore = Math.max(threshold, ...scores) * 1.15 || 1;
   const x = (i: number) => pad + (count > 1 ? (i / (count - 1)) * (w - 2 * pad) : 0);
