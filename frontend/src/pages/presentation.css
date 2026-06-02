@@ -180,3 +180,49 @@
   transform-origin: 0 50%;
   z-index: 20;
 }
+
+@media (max-width: 900px) {
+  .scene {
+    align-items: center;
+  }
+
+  .scene__text {
+    padding: 0 18px 14vh;
+    max-width: 100%;
+  }
+
+  .scene__kicker {
+    letter-spacing: 0.28em;
+    font-size: 10px;
+  }
+
+  .scene__sub {
+    font-size: 13px;
+    max-width: 92vw;
+  }
+
+  .explain__header {
+    top: 8vh;
+    letter-spacing: 0.28em;
+    font-size: 11px;
+    padding: 0 12px;
+  }
+
+  .explain__panel {
+    width: min(92vw, 520px);
+    padding: 18px 18px;
+  }
+
+  .explain__panel h3 {
+    font-size: 16px;
+  }
+
+  .explain__panel p {
+    font-size: 13px;
+  }
+
+  .presentation__skip {
+    top: 12px;
+    right: 12px;
+  }
+}

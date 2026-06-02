@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("monitor");
   const [injected, setInjected] = useState<InjectedFlight | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [menuOpen, setMenuOpen] = useState(false);
   const t = useT();
 
   useEffect(() => {
@@ -34,71 +35,49 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
+  function pickTab(id: Tab) {
+    setTab(id);
+    setMenuOpen(false);
+  }
+
+  const clockBlock = (
+    <div className="dash-header__clock">
+      <div className="label" style={{ color: "#7fd1c6", fontSize: 10, letterSpacing: "0.18em" }}>
+        STATUS · OPERATIONAL
+      </div>
+      <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--text)", letterSpacing: "0.06em" }}>
+        {formatUtc(now)}
+      </div>
+    </div>
+  );
+
+  const tabButtons = TAB_IDS.map((id) => (
+    <button
+      key={id}
+      onClick={() => pickTab(id)}
+      style={{
+        borderColor: tab === id ? "var(--info)" : "var(--panel-edge)",
+        color: tab === id ? "var(--info)" : "var(--text)",
+      }}
+    >
+      {t.nav[id]}
+    </button>
+  ));
+
   return (
     <>
       <DynamicBackdrop light={false} />
-      <div style={{ padding: "14px 56px", width: "100%", boxSizing: "border-box", position: "relative" }}>
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderBottom: "1px solid var(--panel-edge)",
-            paddingBottom: 10,
-            gap: 24,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
-            <img
-              src="/sadar-logo.png"
-              alt="SADAR"
-              style={{ height: 56, width: "auto", display: "block" }}
-            />
+      <div className="dash-shell">
+        <header className="dash-header">
+          <div className="dash-header__brand">
+            <img src="/sadar-logo.png" alt="SADAR" className="dash-header__logo" />
             <div style={{ minWidth: 0 }}>
-              <h1 style={{ margin: 0, fontSize: 18, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{t.appTitle}</h1>
+              <h1 className="dash-header__title">{t.appTitle}</h1>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                gap: 2,
-                paddingRight: 10,
-                borderRight: "1px solid var(--panel-edge)",
-                lineHeight: 1,
-              }}
-            >
-              <div
-                className="label"
-                style={{ color: "#7fd1c6", fontSize: 10, letterSpacing: "0.18em" }}
-              >
-                STATUS · OPERATIONAL
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--mono)",
-                  fontSize: 11,
-                  color: "var(--text)",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {formatUtc(now)}
-              </div>
-            </div>
-            {TAB_IDS.map((id) => (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                style={{
-                  borderColor: tab === id ? "var(--info)" : "var(--panel-edge)",
-                  color: tab === id ? "var(--info)" : "var(--text)",
-                }}
-              >
-                {t.nav[id]}
-              </button>
-            ))}
+          <div className="dash-header__nav">
+            {clockBlock}
+            {tabButtons}
             <Link to="/">
               <button>{t.nav.presentation}</button>
             </Link>
@@ -108,8 +87,35 @@ export default function Dashboard() {
               </button>
             </Link>
             <LangToggle />
+            <button
+              type="button"
+              className="dash-header__burger"
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((value) => !value)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
           </div>
         </header>
+
+        {menuOpen && (
+          <nav className="dash-header__drawer">
+            {clockBlock}
+            {tabButtons}
+            <Link to="/" onClick={() => setMenuOpen(false)}>
+              <button>{t.nav.presentation}</button>
+            </Link>
+            <Link to="/presentation/final" onClick={() => setMenuOpen(false)}>
+              <button style={{ borderColor: "var(--info)", color: "var(--info)" }}>
+                {t.scenes.finalNav}
+              </button>
+            </Link>
+            <LangToggle />
+          </nav>
+        )}
 
         <main style={{ marginTop: 16, position: "relative" }}>
           <div style={{ display: tab === "monitor" ? "block" : "none" }}>

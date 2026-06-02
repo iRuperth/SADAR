@@ -83,7 +83,7 @@ export default function Metrics() {
   const maxPr = Math.max(...data.results.map((row) => row.real_pr_auc));
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 16, alignItems: "start" }}>
+    <div className="metrics-layout">
       <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
         <div className="panel" style={{ padding: 18 }}>
           <div className="label">FINAL MODEL</div>
@@ -104,7 +104,7 @@ export default function Metrics() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
+        <div className="metrics-kpis">
           {[
             { label: "REAL ROC-AUC", value: pct(winner.real_roc_auc), hint: "anomaly separability" },
             { label: "REAL PR-AUC", value: pct(winner.real_pr_auc), hint: "rare-class precision/recall" },
@@ -130,7 +130,8 @@ export default function Metrics() {
               held-out test · 2020 · {data.results.length} detectors
             </span>
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
+          <div className="metrics-table-scroll">
+          <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
             <thead>
               <tr className="label" style={{ color: "var(--label)" }}>
                 <th style={{ textAlign: "left", padding: "6px 8px" }}>MODEL</th>
@@ -190,6 +191,7 @@ export default function Metrics() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="panel" style={{ padding: 16 }}>
@@ -197,7 +199,8 @@ export default function Metrics() {
             <span className="label">SYNTHETIC ANOMALY PERFORMANCE</span>
             <span className="label" style={{ color: "var(--muted)" }}>ROC-AUC by anomaly family and intensity</span>
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
+          <div className="metrics-table-scroll">
+          <table style={{ width: "100%", minWidth: 520, borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
             <thead>
               <tr className="label" style={{ color: "var(--label)" }}>
                 <th style={{ textAlign: "left", padding: "6px 8px" }}>ANOMALY</th>
@@ -253,6 +256,7 @@ export default function Metrics() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
       </div>

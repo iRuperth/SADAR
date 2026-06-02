@@ -158,15 +158,8 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
   const clock = `T+${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 280px",
-        gap: 0,
-        height: "calc(100vh - 92px)",
-      }}
-    >
-      <div style={{ position: "relative", borderRight: "1px solid var(--panel-edge)" }}>
+    <div className="monitor-layout">
+      <div style={{ position: "relative", borderRight: "1px solid var(--panel-edge)", minHeight: 0 }}>
         <RadarScope
           flights={allFlights}
           stepThreshold={stepThreshold}
@@ -181,8 +174,9 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
           <div
             style={{
               position: "absolute",
-              top: 116,
+              top: 14,
               left: 14,
+              right: 14,
               maxWidth: 280,
               display: "flex",
               flexDirection: "column",
@@ -229,6 +223,8 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
             display: "flex",
             gap: 6,
             alignItems: "center",
+            flexWrap: "wrap",
+            maxWidth: "calc(100% - 24px)",
             background: "rgba(14, 26, 31, 0.85)",
             border: "1px solid var(--panel-edge)",
             padding: "6px 10px",
@@ -291,7 +287,7 @@ export default function Monitor({ injected, onClearInjected }: MonitorProps) {
         )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, background: "var(--panel)" }}>
+      <div className="monitor-strip-panel">
         <div
           style={{
             padding: "8px 12px",

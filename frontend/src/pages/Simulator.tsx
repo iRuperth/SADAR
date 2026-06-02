@@ -84,14 +84,7 @@ export default function Simulator({ onInject, hasInjected, onClearInjected }: Si
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "280px minmax(0, 1fr) minmax(0, 1fr)",
-        gap: 14,
-        height: "calc(100vh - 110px)",
-      }}
-    >
+    <div className="simulator-layout">
       <div className="panel" style={{ padding: 16, display: "grid", gap: 16, alignContent: "start", overflowY: "auto", minHeight: 0 }}>
         <div>
           <div className="label">{t.simulator.baseFlight}</div>
@@ -209,7 +202,7 @@ export default function Simulator({ onInject, hasInjected, onClearInjected }: Si
           />
         )}
         {result && baseDetail && (
-          <div className="panel" style={{ flex: 1, minHeight: 0, padding: 10 }}>
+          <div className="panel" style={{ flex: 1, minHeight: 320, padding: 10 }}>
             <RadarPlot
               tracks={[
                 { points: baseDetail.path, color: "var(--muted)", label: t.simulator.original, dashed: true },
@@ -220,10 +213,10 @@ export default function Simulator({ onInject, hasInjected, onClearInjected }: Si
         )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: 260, minWidth: 0 }}>
         <div className="label" style={{ marginBottom: 6 }}>{t.monitor.scoreTitle}</div>
         {result && (
-          <div style={{ flex: 1, minHeight: 0 }}>
+          <div style={{ flex: 1, minHeight: 220 }}>
             <ScoreTimeline
               scores={result.scores}
               threshold={result.step_threshold}
