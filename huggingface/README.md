@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: false
 license: mit
-short_description: Anomaly detection on ADS-B trajectories around Madrid-Barajas.
+short_description: Anomaly detection on ADS-B trajectories at Madrid LEMD.
 ---
 
 # SADAR — Hugging Face Space card

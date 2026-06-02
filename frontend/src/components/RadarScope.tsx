@@ -12,6 +12,8 @@ export interface ActiveAlert {
 const KM_PER_NM = 1.852;
 const SCOPE_RANGE_NM = 40;
 const SCOPE_RANGE_KM = SCOPE_RANGE_NM * KM_PER_NM;
+const COMPACT_SCOPE_WIDTH = 600;
+const TINY_SCOPE_WIDTH = 420;
 
 const LEMD_RUNWAYS: Array<{ name: string; lat1: number; lon1: number; lat2: number; lon2: number }> = [
   { name: "18R/36L", lat1: 40.531799, lon1: -3.574850, lat2: 40.492599, lon2: -3.574630 },
@@ -312,6 +314,17 @@ export default function RadarScope({
     });
   }, [size, pxPerKm, active, center, selectedId]);
 
+  const compact = size.w < COMPACT_SCOPE_WIDTH;
+  const tiny = size.w < TINY_SCOPE_WIDTH;
+  const blockOffsetX = compact ? 8 : 12;
+  const blockOffsetY = compact ? 4 : 6;
+  const blockFontSize = compact ? 8 : 10;
+  const blockLineHeight = compact ? 1.05 : 1.2;
+  const compassSize = compact ? 48 : 64;
+  const compassCenter = compassSize / 2;
+  const compassRadius = compassSize / 2 - 4;
+  const compassTop = tiny ? 14 : 36;
+
   return (
     <div ref={containerRef} className="scope-root">
       <canvas ref={canvasRef} className="scope-canvas" style={{ width: size.w, height: size.h }} />
@@ -330,7 +343,12 @@ export default function RadarScope({
           <div
             key={a.flight.id}
             className={cls.join(" ")}
-            style={{ left: p.x + 12, top: p.y + 6 }}
+            style={{
+              left: p.x + blockOffsetX,
+              top: p.y + blockOffsetY,
+              fontSize: blockFontSize,
+              lineHeight: blockLineHeight,
+            }}
             onClick={() => onSelect(a.flight.id)}
           >
             {a.flight.callsign}{"\n"}
@@ -339,22 +357,27 @@ export default function RadarScope({
           </div>
         );
       })}
-      <div className="scope-hud" style={{ top: 10, left: 14 }}>
-        LEMD ACC // RANGE {SCOPE_RANGE_NM} NM
-      </div>
+      {!tiny && (
+        <div className="scope-hud" style={{ top: 10, left: 14 }}>
+          LEMD ACC // RANGE {SCOPE_RANGE_NM} NM
+        </div>
+      )}
       <div
         className="scope-hud"
-        style={{ top: 36, left: 14, pointerEvents: "none" }}
+        style={{ top: compassTop, left: 14, pointerEvents: "none" }}
       >
-        <svg width={64} height={64} style={{ display: "block" }}>
-          <circle cx={32} cy={32} r={28} fill="none" stroke="var(--panel-edge)" />
-          <line x1={32} y1={6} x2={32} y2={58} stroke="var(--map-feature)" />
-          <line x1={6} y1={32} x2={58} y2={32} stroke="var(--map-feature)" />
-          <polygon points="32,4 28,14 32,11 36,14" fill="var(--info)" />
-          <text x={32} y={20} textAnchor="middle" fontSize={9} fill="var(--info)" fontFamily="var(--mono)">N</text>
-          <text x={32} y={56} textAnchor="middle" fontSize={9} fill="var(--label)" fontFamily="var(--mono)">S</text>
-          <text x={52} y={35} textAnchor="middle" fontSize={9} fill="var(--label)" fontFamily="var(--mono)">E</text>
-          <text x={12} y={35} textAnchor="middle" fontSize={9} fill="var(--label)" fontFamily="var(--mono)">W</text>
+        <svg width={compassSize} height={compassSize} style={{ display: "block" }}>
+          <circle cx={compassCenter} cy={compassCenter} r={compassRadius} fill="none" stroke="var(--panel-edge)" />
+          <line x1={compassCenter} y1={compassCenter - compassRadius + 2} x2={compassCenter} y2={compassCenter + compassRadius - 2} stroke="var(--map-feature)" />
+          <line x1={compassCenter - compassRadius + 2} y1={compassCenter} x2={compassCenter + compassRadius - 2} y2={compassCenter} stroke="var(--map-feature)" />
+          <polygon
+            points={`${compassCenter},${compassCenter - compassRadius - 2} ${compassCenter - 4},${compassCenter - compassRadius + 8} ${compassCenter},${compassCenter - compassRadius + 5} ${compassCenter + 4},${compassCenter - compassRadius + 8}`}
+            fill="var(--info)"
+          />
+          <text x={compassCenter} y={compassCenter - compassRadius + 14} textAnchor="middle" fontSize={9} fill="var(--info)" fontFamily="var(--mono)">N</text>
+          <text x={compassCenter} y={compassCenter + compassRadius - 4} textAnchor="middle" fontSize={9} fill="var(--label)" fontFamily="var(--mono)">S</text>
+          <text x={compassCenter + compassRadius - 4} y={compassCenter + 3} textAnchor="middle" fontSize={9} fill="var(--label)" fontFamily="var(--mono)">E</text>
+          <text x={compassCenter - compassRadius + 6} y={compassCenter + 3} textAnchor="middle" fontSize={9} fill="var(--label)" fontFamily="var(--mono)">W</text>
         </svg>
       </div>
       <div className="scope-hud" style={{ top: 10, right: 14, textAlign: "right" }}>

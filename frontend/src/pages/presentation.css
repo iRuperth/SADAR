@@ -12,6 +12,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100svh;
   overflow: hidden;
   background: #05080d;
 }
@@ -182,6 +183,11 @@
 }
 
 @media (max-width: 900px) {
+  .presentation__track {
+    height: 700vh;
+    height: 700svh;
+  }
+
   .scene {
     align-items: center;
   }
@@ -196,9 +202,14 @@
     font-size: 10px;
   }
 
+  .scene__title {
+    letter-spacing: 0.02em;
+  }
+
   .scene__sub {
     font-size: 13px;
     max-width: 92vw;
+    padding-bottom: 8px;
   }
 
   .explain__header {
@@ -224,5 +235,8 @@
   .presentation__skip {
     top: 12px;
     right: 12px;
+    background: rgba(5, 8, 13, 0.6);
+    padding: 6px 8px;
+    border-radius: 2px;
   }
 }

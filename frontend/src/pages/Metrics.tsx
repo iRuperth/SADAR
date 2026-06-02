@@ -9,6 +9,50 @@ interface AnomalyGroup {
   rows: { intensity: string; values: Record<string, number> }[];
 }
 
+const MOBILE_BREAKPOINT_PX = 900;
+const FINAL_MODEL_FONT_DESKTOP = 32;
+const FINAL_MODEL_FONT_MOBILE = 24;
+const FINAL_DESC_FONT_DESKTOP = 11;
+const FINAL_DESC_FONT_MOBILE = 12;
+const KPI_VALUE_FONT_DESKTOP = 26;
+const KPI_VALUE_FONT_MOBILE = 30;
+const PR_AUC_BAR_HEIGHT = 10;
+
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+    const handler = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return isMobile;
+}
+
+function SwipeHint() {
+  return (
+    <div
+      style={{
+        color: "var(--muted)",
+        fontSize: 10,
+        letterSpacing: "0.1em",
+        marginTop: 6,
+        marginBottom: 2,
+        fontFamily: "var(--mono)",
+      }}
+    >
+      ← swipe →
+    </div>
+  );
+}
+
 function groupAnomalies(rows: MetricRow[]): AnomalyGroup[] {
   const families: Record<string, string> = {
     route_deviation: "ROUTE DEVIATION",
@@ -66,6 +110,7 @@ const MODEL_NOTES: Record<string, string> = {
 
 export default function Metrics() {
   const t = useT();
+  const isMobile = useIsMobile();
   const [data, setData] = useState<MetricsData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +127,11 @@ export default function Metrics() {
   const winner = data.results.find((row) => row.model === data.selected_model) ?? data.results[0];
   const maxPr = Math.max(...data.results.map((row) => row.real_pr_auc));
 
+  const finalModelFontSize = isMobile ? FINAL_MODEL_FONT_MOBILE : FINAL_MODEL_FONT_DESKTOP;
+  const finalDescFontSize = isMobile ? FINAL_DESC_FONT_MOBILE : FINAL_DESC_FONT_DESKTOP;
+  const kpiValueFontSize = isMobile ? KPI_VALUE_FONT_MOBILE : KPI_VALUE_FONT_DESKTOP;
+  const finalDescMaxWidth = isMobile ? "100%" : 720;
+
   return (
     <div className="metrics-layout">
       <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
@@ -89,7 +139,7 @@ export default function Metrics() {
           <div className="label">FINAL MODEL</div>
           <div
             style={{
-              fontSize: 32,
+              fontSize: finalModelFontSize,
               letterSpacing: "0.1em",
               color: "var(--normal)",
               marginTop: 4,
@@ -98,7 +148,7 @@ export default function Metrics() {
           >
             {winner.model.toUpperCase()}
           </div>
-          <div style={{ color: "var(--label)", fontSize: 11, marginTop: 6, maxWidth: 720 }}>
+          <div style={{ color: "var(--label)", fontSize: finalDescFontSize, marginTop: 6, maxWidth: finalDescMaxWidth }}>
             Selected after a head-to-head evaluation of 4 detectors on identical preprocessing, splits and metrics.
             Held-out PR-AUC and synthetic robustness drive the choice; the other three remain as documented baselines.
           </div>
@@ -117,7 +167,7 @@ export default function Metrics() {
           ].map((kpi) => (
             <div key={kpi.label} className="panel" style={{ padding: 14 }}>
               <div className="label">{kpi.label}</div>
-              <div style={{ fontSize: 26, color: "var(--info)", marginTop: 4, letterSpacing: "0.05em" }}>{kpi.value}</div>
+              <div style={{ fontSize: kpiValueFontSize, color: "var(--info)", marginTop: 4, letterSpacing: "0.05em" }}>{kpi.value}</div>
               <div style={{ color: "var(--muted)", fontSize: 10, marginTop: 4 }}>{kpi.hint}</div>
             </div>
           ))}
@@ -130,68 +180,148 @@ export default function Metrics() {
               held-out test · 2020 · {data.results.length} detectors
             </span>
           </div>
-          <div className="metrics-table-scroll">
-          <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
-            <thead>
-              <tr className="label" style={{ color: "var(--label)" }}>
-                <th style={{ textAlign: "left", padding: "6px 8px" }}>MODEL</th>
-                <th style={{ textAlign: "right", padding: "6px 8px" }}>REAL ROC</th>
-                <th style={{ textAlign: "right", padding: "6px 8px" }}>REAL PR-AUC</th>
-                <th style={{ textAlign: "right", padding: "6px 8px" }}>SYN ROC</th>
-                <th style={{ textAlign: "right", padding: "6px 8px" }}>Δ vs BASELINE</th>
-                <th style={{ width: "26%", padding: "6px 8px" }}>PR-AUC</th>
-              </tr>
-            </thead>
-            <tbody>
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
               {data.results.map((row) => {
                 const chosen = row.model === data.selected_model;
                 return (
-                  <tr
+                  <div
                     key={row.model}
+                    className="panel"
                     style={{
-                      borderTop: "1px solid var(--panel-edge)",
+                      padding: 12,
                       background: chosen ? "rgba(127, 209, 198, 0.06)" : undefined,
-                      color: chosen ? "var(--normal)" : "var(--text)",
+                      borderColor: chosen ? "var(--normal)" : undefined,
                     }}
                   >
-                    <td style={{ padding: "10px 8px" }}>
-                      <div style={{ fontSize: 13, letterSpacing: "0.06em" }}>
-                        {row.model}
-                        {chosen ? "  ★" : ""}
-                      </div>
-                      <div style={{ color: "var(--muted)", fontSize: 10, marginTop: 2 }}>
-                        {MODEL_NOTES[row.model] ?? ""}
-                      </div>
-                    </td>
-                    <td style={{ textAlign: "right", padding: "10px 8px" }}>{pct(row.real_roc_auc)}</td>
-                    <td style={{ textAlign: "right", padding: "10px 8px" }}>{pct(row.real_pr_auc)}</td>
-                    <td style={{ textAlign: "right", padding: "10px 8px" }}>{pct(row.synthetic_mean_roc_auc)}</td>
-                    <td
+                    <div
                       style={{
-                        textAlign: "right",
-                        padding: "10px 8px",
-                        color: baseline && row.real_pr_auc >= baseline.real_pr_auc ? "var(--info)" : "var(--muted)",
+                        fontSize: 14,
+                        letterSpacing: "0.06em",
+                        color: chosen ? "var(--normal)" : "var(--text)",
+                        fontFamily: "var(--mono)",
                       }}
                     >
-                      {baseline ? delta(row.real_pr_auc, baseline.real_pr_auc) : "—"}
-                    </td>
-                    <td style={{ padding: "10px 8px" }}>
-                      <div style={{ height: 10, background: "var(--panel-edge)" }}>
+                      {row.model}
+                      {chosen ? "  ★" : ""}
+                    </div>
+                    <div style={{ color: "var(--muted)", fontSize: 10, marginTop: 4, lineHeight: 1.4 }}>
+                      {MODEL_NOTES[row.model] ?? ""}
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 8,
+                        marginTop: 10,
+                        fontFamily: "var(--mono)",
+                      }}
+                    >
+                      <div>
+                        <div className="label" style={{ color: "var(--muted)" }}>REAL ROC</div>
+                        <div style={{ fontSize: 13, color: "var(--text)", marginTop: 2 }}>{pct(row.real_roc_auc)}</div>
+                      </div>
+                      <div>
+                        <div className="label" style={{ color: "var(--muted)" }}>REAL PR-AUC</div>
+                        <div style={{ fontSize: 13, color: "var(--text)", marginTop: 2 }}>{pct(row.real_pr_auc)}</div>
+                      </div>
+                      <div>
+                        <div className="label" style={{ color: "var(--muted)" }}>SYN ROC</div>
+                        <div style={{ fontSize: 13, color: "var(--text)", marginTop: 2 }}>{pct(row.synthetic_mean_roc_auc)}</div>
+                      </div>
+                      <div>
+                        <div className="label" style={{ color: "var(--muted)" }}>Δ vs BASELINE</div>
                         <div
                           style={{
-                            height: 10,
+                            fontSize: 13,
+                            marginTop: 2,
+                            color: baseline && row.real_pr_auc >= baseline.real_pr_auc ? "var(--info)" : "var(--muted)",
+                          }}
+                        >
+                          {baseline ? delta(row.real_pr_auc, baseline.real_pr_auc) : "—"}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 10 }}>
+                      <div className="label" style={{ color: "var(--muted)", marginBottom: 4 }}>PR-AUC</div>
+                      <div style={{ height: PR_AUC_BAR_HEIGHT, background: "var(--panel-edge)" }}>
+                        <div
+                          style={{
+                            height: PR_AUC_BAR_HEIGHT,
                             width: `${(row.real_pr_auc / maxPr) * 100}%`,
                             background: chosen ? "var(--normal)" : "var(--info)",
                           }}
                         />
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-          </div>
+            </div>
+          ) : (
+            <div className="metrics-table-scroll">
+            <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
+              <thead>
+                <tr className="label" style={{ color: "var(--label)" }}>
+                  <th style={{ textAlign: "left", padding: "6px 8px" }}>MODEL</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px" }}>REAL ROC</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px" }}>REAL PR-AUC</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px" }}>SYN ROC</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px" }}>Δ vs BASELINE</th>
+                  <th style={{ width: "26%", padding: "6px 8px" }}>PR-AUC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.results.map((row) => {
+                  const chosen = row.model === data.selected_model;
+                  return (
+                    <tr
+                      key={row.model}
+                      style={{
+                        borderTop: "1px solid var(--panel-edge)",
+                        background: chosen ? "rgba(127, 209, 198, 0.06)" : undefined,
+                        color: chosen ? "var(--normal)" : "var(--text)",
+                      }}
+                    >
+                      <td style={{ padding: "10px 8px" }}>
+                        <div style={{ fontSize: 13, letterSpacing: "0.06em" }}>
+                          {row.model}
+                          {chosen ? "  ★" : ""}
+                        </div>
+                        <div style={{ color: "var(--muted)", fontSize: 10, marginTop: 2 }}>
+                          {MODEL_NOTES[row.model] ?? ""}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "10px 8px" }}>{pct(row.real_roc_auc)}</td>
+                      <td style={{ textAlign: "right", padding: "10px 8px" }}>{pct(row.real_pr_auc)}</td>
+                      <td style={{ textAlign: "right", padding: "10px 8px" }}>{pct(row.synthetic_mean_roc_auc)}</td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          padding: "10px 8px",
+                          color: baseline && row.real_pr_auc >= baseline.real_pr_auc ? "var(--info)" : "var(--muted)",
+                        }}
+                      >
+                        {baseline ? delta(row.real_pr_auc, baseline.real_pr_auc) : "—"}
+                      </td>
+                      <td style={{ padding: "10px 8px" }}>
+                        <div style={{ height: PR_AUC_BAR_HEIGHT, background: "var(--panel-edge)" }}>
+                          <div
+                            style={{
+                              height: PR_AUC_BAR_HEIGHT,
+                              width: `${(row.real_pr_auc / maxPr) * 100}%`,
+                              background: chosen ? "var(--normal)" : "var(--info)",
+                            }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            </div>
+          )}
         </div>
 
         <div className="panel" style={{ padding: 16 }}>
@@ -199,6 +329,7 @@ export default function Metrics() {
             <span className="label">SYNTHETIC ANOMALY PERFORMANCE</span>
             <span className="label" style={{ color: "var(--muted)" }}>ROC-AUC by anomaly family and intensity</span>
           </div>
+          {isMobile && <SwipeHint />}
           <div className="metrics-table-scroll">
           <table style={{ width: "100%", minWidth: 520, borderCollapse: "collapse", marginTop: 10, fontFamily: "var(--mono)" }}>
             <thead>
@@ -289,15 +420,15 @@ export default function Metrics() {
           <div className="label" style={{ marginBottom: 10 }}>METRIC PRIMER</div>
           <div style={{ fontSize: 11, color: "var(--label)", lineHeight: 1.55 }}>
             <div style={{ marginBottom: 6 }}>
-              <span style={{ color: "var(--info)" }}>ROC-AUC</span> — probability a random anomaly
+              <span style={{ color: "var(--info)" }}>ROC-AUC</span> → probability a random anomaly
               scores higher than a random normal. 50% = random, 100% = perfect.
             </div>
             <div style={{ marginBottom: 6 }}>
-              <span style={{ color: "var(--info)" }}>PR-AUC</span> — area under
+              <span style={{ color: "var(--info)" }}>PR-AUC</span> → area under
               precision/recall. More informative than ROC when anomalies are rare (our case).
             </div>
             <div>
-              <span style={{ color: "var(--info)" }}>HELD-OUT</span> — test data the model never
+              <span style={{ color: "var(--info)" }}>HELD-OUT</span> → test data the model never
               saw during training or hyperparameter tuning. The honest measure of generalization.
             </div>
           </div>

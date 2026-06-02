@@ -34,6 +34,11 @@ body,
   background: var(--bg-base);
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background-color: var(--bg-base);
   color: var(--text);
@@ -43,6 +48,7 @@ body {
   letter-spacing: 0.02em;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -491,6 +497,30 @@ button:hover {
 
   .edge-nav {
     display: none;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  button {
+    padding: 10px 14px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  input[type="range"] {
+    min-height: 28px;
+  }
+
+  .dash-header__drawer {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .dash-header__burger[aria-expanded="true"] {
+    color: var(--info);
+    border-color: var(--info);
   }
 }
 
