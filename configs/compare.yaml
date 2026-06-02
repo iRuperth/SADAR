@@ -1,0 +1,17 @@
+eval_config: configs/eval.yaml
+
+models:
+  - name: LSTM
+    checkpoint: ${oc.env:SADAR_MODELS_DIR,models}/lstm_autoencoder.pt
+  - name: Transformer
+    checkpoint: ${oc.env:SADAR_MODELS_DIR,models}/transformer_autoencoder.pt
+  - name: VAE-LSTM
+    checkpoint: ${oc.env:SADAR_MODELS_DIR,models}/vae_lstm.pt
+
+ensemble:
+  enabled: true
+  reducers: [mean, max]
+
+output:
+  path: ${oc.env:SADAR_REPORTS_DIR,reports}/model_comparison.json
+  curves_dir: ${oc.env:SADAR_REPORTS_DIR,reports}/figures

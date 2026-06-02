@@ -1,0 +1,5 @@
+eval_config: configs/eval.yaml
+
+checkpoint: ${oc.env:SADAR_MODELS_DIR,models}/vae_lstm.pt
+
+metrics: ${oc.env:SADAR_REPORTS_DIR,reports}/model_comparison.json

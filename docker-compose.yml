@@ -1,0 +1,33 @@
+name: sadar
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: sadar-backend:latest
+    container_name: sadar-backend
+    environment:
+      SADAR_PROCESSED_DIR: /app/data/processed
+      SADAR_MODELS_DIR: /app/models
+      SADAR_REPORTS_DIR: /app/reports
+      SADAR_SERVE_CONFIG: /app/configs/serve.yaml
+    volumes:
+      - ./data/processed:/app/data/processed:ro
+      - ./models:/app/models:ro
+      - ./reports:/app/reports:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: sadar-frontend:latest
+    container_name: sadar-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5180:80"
+    restart: unless-stopped

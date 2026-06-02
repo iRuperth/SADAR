@@ -1,0 +1,31 @@
+seed: 42
+
+data:
+  processed_dir: ${oc.env:SADAR_PROCESSED_DIR,data/processed}
+
+preprocessing_config: configs/preprocessing.yaml
+baseline_config: configs/baseline.yaml
+
+model:
+  checkpoint: ${oc.env:SADAR_MODELS_DIR,models}/lstm_autoencoder.pt
+  device: auto
+
+synthetic:
+  sample_size: 2000
+  onset_fraction: 0.5
+  route_deviation:
+    magnitudes_m: [20000, 40000, 80000]
+  altitude:
+    magnitudes_m: [300, 800, 1500]
+  speed:
+    factors: [1.6, 2.2, 0.4]
+  holding:
+    turn_periods_s: [240, 120]
+  freeze:
+    enabled: true
+
+threshold:
+  val_percentile: 99.0
+
+latency:
+  normal_step_percentile: 99.0

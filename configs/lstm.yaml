@@ -1,0 +1,24 @@
+seed: 42
+
+data:
+  processed_dir: ${oc.env:SADAR_PROCESSED_DIR,data/processed}
+
+model:
+  hidden_size: 64
+  latent_size: 16
+  num_layers: 1
+  dropout: 0.1
+
+training:
+  epochs: 50
+  batch_size: 256
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  patience: 7
+  lr_factor: 0.5
+  lr_patience: 3
+  device: auto
+
+output:
+  dir: ${oc.env:SADAR_MODELS_DIR,models}
+  checkpoint: lstm_autoencoder.pt

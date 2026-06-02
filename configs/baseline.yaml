@@ -1,0 +1,12 @@
+seed: 42
+
+data:
+  processed_dir: ${oc.env:SADAR_PROCESSED_DIR,data/processed}
+
+isolation_forest:
+  n_estimators: 200
+  max_samples: auto
+  contamination: auto
+
+threshold:
+  val_percentile: 99.0
